@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../context/LanguageContext';
 import type { Project, ProjectCategory, ProjectStatus, ProjectPriority, PriorityInputs } from '../types';
 import {
   calculateDelay,
@@ -777,6 +778,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 export default function ProjectsPage() {
   const { state, addProject, isGovernment } = useApp();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -879,7 +881,9 @@ export default function ProjectsPage() {
           {/* Title row */}
           <div className="flex items-center justify-between py-4 gap-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Projects</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {isGovernment ? t('projects.title') : t('projects.titlePublic')}
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {displayedProjects.length === state.projects.length
                   ? `${state.projects.length} project${state.projects.length !== 1 ? 's' : ''}`
@@ -892,12 +896,12 @@ export default function ProjectsPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
               >
                 <Plus size={16} />
-                <span className="hidden sm:inline">Add Project</span>
+                <span className="hidden sm:inline">{t('projects.addNew')}</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-semibold">
                 <Users size={14} className="text-emerald-600 dark:text-emerald-400" />
-                <span>Public Mode · Read-Only View</span>
+                <span>{t('nav.publicResidentBadge')}</span>
               </div>
             )}
           </div>
@@ -914,7 +918,7 @@ export default function ProjectsPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setParam('q', e.target.value)}
-                placeholder="Search title, location, contractor…"
+                placeholder={t('projects.searchPlaceholder')}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400 dark:placeholder-gray-500"
               />
               {query && (
