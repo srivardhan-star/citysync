@@ -78,8 +78,8 @@ interface TooltipProps {
 function ChartTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
-      {label && <p className="font-semibold text-gray-700 mb-1">{label}</p>}
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-sm">
+      {label && <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">{label}</p>}
       {payload.map((entry) => (
         <p key={entry.name} style={{ color: entry.color }} className="flex gap-2">
           <span>{entry.name}:</span>
@@ -100,14 +100,14 @@ interface MetricCardProps {
   accent?: string;
 }
 
-function MetricCard({ icon, label, value, sub, accent = 'bg-blue-50 text-blue-600' }: MetricCardProps) {
+function MetricCard({ icon, label, value, sub, accent = 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' }: MetricCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-start gap-4">
       <div className={`rounded-lg p-2.5 ${accent} flex-shrink-0`}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-0.5 leading-tight">{value}</p>
-        {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-0.5 leading-tight">{value}</p>
+        {sub && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{sub}</p>}
       </div>
     </div>
   );
@@ -118,8 +118,8 @@ function MetricCard({ icon, label, value, sub, accent = 'bg-blue-50 text-blue-60
 function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-4">
-      <h2 className="text-base font-semibold text-gray-800">{title}</h2>
-      {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">{title}</h2>
+      {sub && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -361,15 +361,15 @@ export default function Reports() {
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 print:bg-white transition-colors">
       {/* ── Header ── */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 print:hidden">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 print:hidden transition-colors">
         <div className="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-2 flex-1">
-            <BarChart3 className="w-6 h-6 text-blue-600" />
+            <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Reports &amp; Analytics</h1>
-              <p className="text-xs text-gray-500">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Reports &amp; Analytics</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Live data from {state.projects.length} projects · {state.reviews.length} reviews
               </p>
             </div>
@@ -379,14 +379,14 @@ export default function Reports() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition bg-white dark:bg-gray-800"
             >
               <Download className="w-4 h-4" />
               Export CSV
             </button>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition bg-white dark:bg-gray-800"
             >
               <Printer className="w-4 h-4" />
               Print Summary
@@ -404,23 +404,23 @@ export default function Reports() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 space-y-8">
 
         {/* ── Filters ── */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 print:hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 print:hidden">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">
               <Filter className="w-4 h-4" />
               Filters
             </div>
 
             {/* Department */}
             <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-gray-400" />
-              <label className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+              <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+              <label className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
                 Department
               </label>
               <select
                 value={deptFilter}
                 onChange={(e) => { setDeptFilter(e.target.value); setTablePage(1); }}
-                className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
                 <option value="All">All Departments</option>
                 {DEPARTMENT_LIST.map((d) => (
@@ -431,14 +431,14 @@ export default function Reports() {
 
             {/* Status */}
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-gray-400" />
-              <label className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+              <TrendingUp className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+              <label className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
                 Status
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setTablePage(1); }}
-                className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
                 <option value="All">All Statuses</option>
                 {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -451,13 +451,13 @@ export default function Reports() {
             {(deptFilter !== 'All' || statusFilter !== 'All') && (
               <button
                 onClick={() => { setDeptFilter('All'); setStatusFilter('All'); setTablePage(1); }}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Clear filters
               </button>
             )}
 
-            <span className="ml-auto text-xs text-gray-400">
+            <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
               Showing {filteredProjects.length} of {state.projects.length} projects
             </span>
           </div>
@@ -472,42 +472,42 @@ export default function Reports() {
               label="Total Projects"
               value={metrics.total}
               sub={`${metrics.completedCount} completed`}
-              accent="bg-blue-50 text-blue-600"
+              accent="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
             />
             <MetricCard
               icon={<CheckCircle2 className="w-5 h-5" />}
               label="Completion Rate"
               value={`${metrics.completionRate}%`}
               sub={`${metrics.completedCount} / ${metrics.total}`}
-              accent="bg-green-50 text-green-600"
+              accent="bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400"
             />
             <MetricCard
               icon={<TrendingUp className="w-5 h-5" />}
               label="On-Time Rate"
               value={`${metrics.onTimeRate}%`}
               sub="Of completed projects"
-              accent="bg-emerald-50 text-emerald-600"
+              accent="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
             />
             <MetricCard
               icon={<Clock className="w-5 h-5" />}
               label="Avg Delay"
               value={metrics.avgDelay > 0 ? `${metrics.avgDelay}d` : '—'}
               sub="Late-completed projects"
-              accent="bg-amber-50 text-amber-600"
+              accent="bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400"
             />
             <MetricCard
               icon={<AlertTriangle className="w-5 h-5" />}
               label="Active Conflicts"
               value={metrics.activeConflicts}
               sub="Unresolved"
-              accent="bg-red-50 text-red-600"
+              accent="bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400"
             />
             <MetricCard
               icon={<Star className="w-5 h-5" />}
               label="Avg Rating"
               value={metrics.avgRating}
               sub={`${metrics.reviewCount} reviews`}
-              accent="bg-yellow-50 text-yellow-600"
+              accent="bg-yellow-50 dark:bg-yellow-950/50 text-yellow-600 dark:text-yellow-400"
             />
           </div>
         </section>
@@ -516,13 +516,13 @@ export default function Reports() {
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Status Distribution */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
             <SectionHeader
               title="Status Distribution"
               sub="Project count by current status"
             />
             {statusPieData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
                 No data to display
               </div>
             ) : (
@@ -553,18 +553,18 @@ export default function Reports() {
                       if (!active || !payload?.length) return null;
                       const d = payload[0].payload as typeof statusPieData[0];
                       return (
-                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-sm">
                           <p className="font-semibold" style={{ color: STATUS_CHART_COLORS[d.key] }}>
                             {d.name}
                           </p>
-                          <p className="text-gray-700">{d.value} project{d.value !== 1 ? 's' : ''}</p>
+                          <p className="text-gray-700 dark:text-gray-200">{d.value} project{d.value !== 1 ? 's' : ''}</p>
                         </div>
                       );
                     }}
                   />
                   <Legend
                     formatter={(value) => (
-                      <span className="text-xs text-gray-600">{value}</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-300">{value}</span>
                     )}
                   />
                 </PieChart>
@@ -573,13 +573,13 @@ export default function Reports() {
           </div>
 
           {/* Department Workload */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
             <SectionHeader
               title="Department Workload"
               sub="Project count per department"
             />
             {deptBarData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
                 No data to display
               </div>
             ) : (
@@ -587,20 +587,20 @@ export default function Reports() {
                 <BarChart data={deptBarData} margin={{ top: 5, right: 16, left: 0, bottom: 48 }}>
                   <XAxis
                     dataKey="dept"
-                    tick={{ fontSize: 10, fill: '#6b7280' }}
+                    tick={{ fontSize: 10, fill: '#9ca3af' }}
                     angle={-30}
                     textAnchor="end"
                     interval={0}
                   />
-                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} allowDecimals={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       const d = payload[0].payload as typeof deptBarData[0];
                       return (
-                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
-                          <p className="font-semibold text-gray-700">{d.fullDept}</p>
-                          <p className="text-blue-600">{d.count} project{d.count !== 1 ? 's' : ''}</p>
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-sm">
+                          <p className="font-semibold text-gray-700 dark:text-gray-200">{d.fullDept}</p>
+                          <p className="text-blue-600 dark:text-blue-400">{d.count} project{d.count !== 1 ? 's' : ''}</p>
                         </div>
                       );
                     }}
@@ -623,13 +623,13 @@ export default function Reports() {
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Planned vs Actual Duration */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
             <SectionHeader
               title="Planned vs Actual Duration"
               sub="Completed projects with both dates (up to 15 most recent)"
             />
             {plannedVsActualData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
                 No completed projects with full date data
               </div>
             ) : (
@@ -640,13 +640,13 @@ export default function Reports() {
                 >
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 9, fill: '#6b7280' }}
+                    tick={{ fontSize: 9, fill: '#9ca3af' }}
                     angle={-35}
                     textAnchor="end"
                     interval={0}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: '#6b7280' }}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
                     label={{
                       value: 'Days',
                       angle: -90,
@@ -659,8 +659,8 @@ export default function Reports() {
                       if (!active || !payload?.length) return null;
                       const d = plannedVsActualData.find((x) => x.name === label);
                       return (
-                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm max-w-[200px]">
-                          <p className="font-semibold text-gray-700 mb-1 text-xs">{d?.fullTitle ?? label}</p>
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-sm max-w-[200px]">
+                          <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1 text-xs">{d?.fullTitle ?? label}</p>
                           {payload.map((e) => (
                             <p key={e.name} style={{ color: e.color }} className="flex justify-between gap-4">
                               <span>{e.name}</span>
@@ -680,7 +680,7 @@ export default function Reports() {
           </div>
 
           {/* Citizen Rating Distribution */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
             <SectionHeader
               title="Citizen Satisfaction"
               sub="Rating distribution across filtered projects"
@@ -690,8 +690,8 @@ export default function Reports() {
                 data={ratingDistData}
                 margin={{ top: 5, right: 16, left: 0, bottom: 5 }}
               >
-                <XAxis dataKey="star" tick={{ fontSize: 12, fill: '#6b7280' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} allowDecimals={false} />
+                <XAxis dataKey="star" tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="count" name="Reviews" radius={[4, 4, 0, 0]}>
                   {ratingDistData.map((_, idx) => {
@@ -705,7 +705,7 @@ export default function Reports() {
         </section>
 
         {/* ── Chart: On-Time vs Delayed ── */}
-        <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
           <SectionHeader
             title="On-Time vs Delayed Completion"
             sub="Completed projects with both planned and actual end dates"
@@ -718,11 +718,11 @@ export default function Reports() {
                   layout="vertical"
                   margin={{ top: 5, right: 32, left: 0, bottom: 5 }}
                 >
-                  <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} allowDecimals={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                   <YAxis
                     type="category"
                     dataKey="label"
-                    tick={{ fontSize: 12, fill: '#374151' }}
+                    tick={{ fontSize: 12, fill: '#9ca3af' }}
                     width={64}
                   />
                   <Tooltip content={<ChartTooltip />} />
@@ -738,21 +738,21 @@ export default function Reports() {
             {/* Stat blurbs */}
             <div className="flex gap-6">
               <div className="text-center">
-                <p className="text-4xl font-bold text-green-600">{onTimeVsDelayedData[0].count}</p>
-                <p className="text-sm text-gray-500 mt-1">On-Time</p>
-                <p className="text-xs text-gray-400">Completed ≤ planned date</p>
+                <p className="text-4xl font-bold text-green-600 dark:text-green-400">{onTimeVsDelayedData[0].count}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">On-Time</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Completed ≤ planned date</p>
               </div>
-              <div className="w-px bg-gray-200" />
+              <div className="w-px bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
-                <p className="text-4xl font-bold text-red-500">{onTimeVsDelayedData[1].count}</p>
-                <p className="text-sm text-gray-500 mt-1">Delayed</p>
-                <p className="text-xs text-gray-400">Completed after planned date</p>
+                <p className="text-4xl font-bold text-red-500 dark:text-red-400">{onTimeVsDelayedData[1].count}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Delayed</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Completed after planned date</p>
               </div>
-              <div className="w-px bg-gray-200" />
+              <div className="w-px bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
-                <p className="text-4xl font-bold text-blue-600">{metrics.onTimeRate}%</p>
-                <p className="text-sm text-gray-500 mt-1">On-Time Rate</p>
-                <p className="text-xs text-gray-400">Of dated completions</p>
+                <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{metrics.onTimeRate}%</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">On-Time Rate</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Of dated completions</p>
               </div>
             </div>
           </div>
@@ -760,14 +760,14 @@ export default function Reports() {
 
         {/* ── Projects Table ── */}
         <section>
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             {/* Table header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center gap-2 flex-1">
-                <Users className="w-4 h-4 text-gray-400" />
-                <h2 className="text-sm font-semibold text-gray-800">
+                <Users className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                   Projects Table
-                  <span className="ml-2 text-xs font-normal text-gray-400">
+                  <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
                     {tableData.length} result{tableData.length !== 1 ? 's' : ''}
                   </span>
                 </h2>
@@ -777,14 +777,14 @@ export default function Reports() {
                 placeholder="Search by title, ID, department…"
                 value={tableSearch}
                 onChange={(e) => { setTableSearch(e.target.value); setTablePage(1); }}
-                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 w-full sm:w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-1.5 w-full sm:w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
+                  <tr className="bg-gray-50 dark:bg-gray-850 border-b border-gray-200 dark:border-gray-700">
                     {(
                       [
                         { key: 'id', label: 'ID' },
@@ -803,8 +803,8 @@ export default function Reports() {
                         onClick={() =>
                           col.key !== 'rating' && handleSort(col.key as keyof Project | 'delay')
                         }
-                        className={`px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap ${
-                          col.key !== 'rating' ? 'cursor-pointer hover:text-gray-800 select-none' : ''
+                        className={`px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap ${
+                          col.key !== 'rating' ? 'cursor-pointer hover:text-gray-800 dark:hover:text-gray-200 select-none' : ''
                         }`}
                       >
                         {col.label}
@@ -818,7 +818,7 @@ export default function Reports() {
                 <tbody>
                   {pagedData.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-4 py-10 text-center text-gray-400 text-sm">
+                      <td colSpan={9} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">
                         No projects match your filters.
                       </td>
                     </tr>
@@ -839,20 +839,20 @@ export default function Reports() {
                         key={project.id}
                         className={
                           idx % 2 === 0
-                            ? 'bg-white hover:bg-blue-50/40 transition-colors'
-                            : 'bg-gray-50/60 hover:bg-blue-50/40 transition-colors'
+                            ? 'bg-white dark:bg-gray-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/20 transition-colors'
+                            : 'bg-gray-50/60 dark:bg-gray-850/60 hover:bg-blue-50/40 dark:hover:bg-blue-900/20 transition-colors'
                         }
                       >
                         {/* ID */}
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                           {project.id.slice(0, 12)}…
                         </td>
 
                         {/* Title */}
-                        <td className="px-4 py-3 text-gray-900 font-medium max-w-[180px]">
+                        <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium max-w-[180px]">
                           <NavLink
                             to={`/projects/${project.id}`}
-                            className="hover:text-blue-600 hover:underline line-clamp-1"
+                            className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline line-clamp-1"
                           >
                             {project.title}
                           </NavLink>
@@ -862,7 +862,7 @@ export default function Reports() {
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              STATUS_BADGE[project.status] ?? 'bg-gray-100 text-gray-700'
+                              STATUS_BADGE[project.status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                             }`}
                           >
                             {STATUS_LABELS[project.status] ?? project.status}
@@ -870,14 +870,14 @@ export default function Reports() {
                         </td>
 
                         {/* Department */}
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
                           {project.department}
                         </td>
 
                         {/* Progress */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <div className="w-20 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                            <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                               <div
                                 className="h-full rounded-full transition-all"
                                 style={{
@@ -891,48 +891,48 @@ export default function Reports() {
                                 }}
                               />
                             </div>
-                            <span className="text-xs text-gray-600 tabular-nums">
+                            <span className="text-xs text-gray-600 dark:text-gray-300 tabular-nums">
                               {project.progress}%
                             </span>
                           </div>
                         </td>
 
                         {/* Planned End */}
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs tabular-nums">
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs tabular-nums">
                           {formatDate(project.plannedEndDate)}
                         </td>
 
                         {/* Actual End */}
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs tabular-nums">
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs tabular-nums">
                           {project.actualEndDate ? formatDate(project.actualEndDate) : '—'}
                         </td>
 
                         {/* Delay */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           {delay.isDelayed ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400">
                               <Clock className="w-3 h-3" />
                               {delay.delayDays}d
                             </span>
                           ) : delay.isCompleted ? (
-                            <span className="text-xs text-green-600 font-medium">On time</span>
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">On time</span>
                           ) : (
-                            <span className="text-xs text-gray-400">{delay.comparisonLabel}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">{delay.comparisonLabel}</span>
                           )}
                         </td>
 
                         {/* Rating */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           {projAvgRating ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600 dark:text-yellow-400">
                               <Star className="w-3 h-3 fill-current" />
                               {projAvgRating}
-                              <span className="text-gray-400 font-normal">
+                              <span className="text-gray-400 dark:text-gray-500 font-normal">
                                 ({projReviews.length})
                               </span>
                             </span>
                           ) : (
-                            <span className="text-xs text-gray-400">—</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
                           )}
                         </td>
                       </tr>
@@ -944,15 +944,15 @@ export default function Reports() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-                <span className="text-xs text-gray-400">
+              <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   Page {tablePage} of {totalPages} · {tableData.length} results
                 </span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setTablePage((p) => Math.max(1, p - 1))}
                     disabled={tablePage === 1}
-                    className="px-2.5 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50 text-xs"
+                    className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs"
                   >
                     ← Prev
                   </button>
@@ -965,7 +965,7 @@ export default function Reports() {
                         className={`px-2.5 py-1 rounded border text-xs ${
                           page === tablePage
                             ? 'bg-blue-600 text-white border-blue-600'
-                            : 'border-gray-300 hover:bg-gray-50'
+                            : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }`}
                       >
                         {page}
@@ -974,10 +974,10 @@ export default function Reports() {
                   })}
                   {totalPages > 7 && tablePage < totalPages && (
                     <>
-                      <span className="px-1 text-gray-400">…</span>
+                      <span className="px-1 text-gray-400 dark:text-gray-500">…</span>
                       <button
                         onClick={() => setTablePage(totalPages)}
-                        className="px-2.5 py-1 rounded border border-gray-300 hover:bg-gray-50 text-xs"
+                        className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs"
                       >
                         {totalPages}
                       </button>
@@ -986,7 +986,7 @@ export default function Reports() {
                   <button
                     onClick={() => setTablePage((p) => Math.min(totalPages, p + 1))}
                     disabled={tablePage === totalPages}
-                    className="px-2.5 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50 text-xs"
+                    className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs"
                   >
                     Next →
                   </button>

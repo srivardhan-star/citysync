@@ -46,18 +46,18 @@ function StatCard({
   }
   return (
     <div
-      className={clsx('card p-4 flex items-start gap-4', to && 'cursor-pointer hover:shadow-md transition-shadow')}
+      className={clsx('card p-4 flex items-start gap-4', to && 'cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99]')}
       onClick={handleClick}
     >
       <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0', color)}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-        {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
+        <div className="text-2xl font-bold" style={{ color: 'var(--cs-text)' }}>{value}</div>
+        <div className="text-sm font-medium" style={{ color: 'var(--cs-text)' }}>{label}</div>
+        {sub && <div className="text-xs mt-0.5" style={{ color: 'var(--cs-muted)' }}>{sub}</div>}
       </div>
-      {to && <ChevronRight className="w-4 h-4 text-gray-400 ml-auto mt-1" />}
+      {to && <ChevronRight className="w-4 h-4 ml-auto mt-1" style={{ color: 'var(--cs-muted)' }} />}
     </div>
   )
 }
@@ -175,13 +175,13 @@ export default function Dashboard() {
       {/* Perspective Info Banner */}
       <div className={clsx(
         'border rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs',
-        isGovernment ? 'bg-blue-50/80 border-blue-200 text-blue-900' : 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+        isGovernment ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200' : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
       )}>
         <div className="flex items-center gap-2.5">
           {isGovernment ? (
-            <Building2 className="w-4 h-4 text-blue-700 shrink-0" />
+            <Building2 className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
           ) : (
-            <Users className="w-4 h-4 text-emerald-700 shrink-0" />
+            <Users className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
           )}
           <span>
             <strong>{isGovernment ? 'Municipal Government Mode' : 'Resident Public Mode'}</strong> — {
@@ -191,7 +191,7 @@ export default function Dashboard() {
             }
           </span>
         </div>
-        <span className="text-[11px] font-semibold text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700">
           Switch role via toggle in top navigation
         </span>
       </div>
@@ -199,8 +199,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">City Infrastructure Overview</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">City Infrastructure Overview</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Real-time tracking of public works projects across all departments
           </p>
         </div>
@@ -212,20 +212,20 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard icon={Layers} label="Total Projects" value={stats.total} color="bg-blue-100 text-blue-700" to="/projects" />
-        <StatCard icon={Activity} label="Ongoing" value={stats.ongoing} color="bg-amber-100 text-amber-700" to="/projects" search="status=ongoing" />
-        <StatCard icon={Clock} label="Delayed" value={stats.delayed} sub="Past original deadline" color="bg-red-100 text-red-700" to="/projects" search="status=delayed" />
-        <StatCard icon={CheckCircle2} label="Completed" value={stats.completed} sub={`${stats.onTime} on time`} color="bg-green-100 text-green-700" to="/projects" search="status=completed" />
-        <StatCard icon={Flame} label="Emergency" value={stats.emergency} color="bg-rose-100 text-rose-700" to="/projects" search="status=emergency" />
-        <StatCard icon={AlertTriangle} label="Conflicts" value={conflicts.filter(c => !c.resolved).length} sub="Scheduling conflicts" color="bg-orange-100 text-orange-700" to="/conflicts" />
+        <StatCard icon={Layers} label="Total Projects" value={stats.total} color="bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300" to="/projects" />
+        <StatCard icon={Activity} label="Ongoing" value={stats.ongoing} color="bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300" to="/projects" search="status=ongoing" />
+        <StatCard icon={Clock} label="Delayed" value={stats.delayed} sub="Past original deadline" color="bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300" to="/projects" search="status=delayed" />
+        <StatCard icon={CheckCircle2} label="Completed" value={stats.completed} sub={`${stats.onTime} on time`} color="bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300" to="/projects" search="status=completed" />
+        <StatCard icon={Flame} label="Emergency" value={stats.emergency} color="bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300" to="/projects" search="status=emergency" />
+        <StatCard icon={AlertTriangle} label="Conflicts" value={conflicts.filter(c => !c.resolved).length} sub="Scheduling conflicts" color="bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300" to="/conflicts" />
       </div>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status distribution */}
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-blue-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Project Status Distribution
           </h2>
           <ResponsiveContainer width="100%" height={220}>
@@ -236,15 +236,15 @@ export default function Dashboard() {
                 ))}
               </Pie>
               <Tooltip formatter={(v: number, n: string) => [v, n]} />
-              <Legend formatter={(v) => <span className="text-xs text-gray-600">{v}</span>} />
+              <Legend formatter={(v) => <span className="text-xs text-gray-600 dark:text-gray-300">{v}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Department distribution */}
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-teal-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Department Workload
           </h2>
           <ResponsiveContainer width="100%" height={220}>
@@ -268,15 +268,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Needs attention */}
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-500" />
             Needs Attention
-            <span className="ml-auto text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+            <span className="ml-auto text-xs bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">
               {needsAttention.length}
             </span>
           </h2>
           {needsAttention.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-gray-400 dark:text-gray-500">
               <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-400" />
               <p className="text-sm">No projects need attention</p>
             </div>
@@ -288,20 +288,20 @@ export default function Dashboard() {
                   <NavLink
                     key={p.id}
                     to={`/projects/${p.id}`}
-                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group"
                   >
                     <div className={clsx(
                       'w-2 h-2 rounded-full mt-1.5 flex-shrink-0',
                       p.status === 'emergency' ? 'bg-rose-500' : 'bg-red-400'
                     )} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700">{p.title}</p>
-                      <p className="text-xs text-gray-500">{p.department}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400">{p.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{p.department}</p>
                       {delay.isDelayed && (
-                        <p className="text-xs text-red-600 font-medium">{delay.comparisonLabel}</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium">{delay.comparisonLabel}</p>
                       )}
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-400 mt-1 flex-shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0" />
                   </NavLink>
                 )
               })}
@@ -311,8 +311,8 @@ export default function Dashboard() {
 
         {/* Recent activity */}
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Recent Activity
           </h2>
           <div className="space-y-2">
@@ -320,12 +320,12 @@ export default function Dashboard() {
               <NavLink
                 key={`${project.id}-${entry.id}-${i}`}
                 to={`/projects/${project.id}`}
-                className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group"
               >
                 <span className="text-sm flex-shrink-0">{ACTIVITY_ICONS[entry.type] || 'ℹ️'}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-700 line-clamp-2 group-hover:text-blue-700">{entry.description}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 truncate">{project.title.substring(0,28)}… · {formatDateTime(entry.timestamp)}</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 group-hover:text-blue-700 dark:group-hover:text-blue-400">{entry.description}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{project.title.substring(0,28)}… · {formatDateTime(entry.timestamp)}</p>
                 </div>
               </NavLink>
             ))}
@@ -334,12 +334,12 @@ export default function Dashboard() {
 
         {/* Upcoming milestones */}
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-purple-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             Upcoming Milestones
           </h2>
           {upcomingMilestones.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">No upcoming milestones</div>
+            <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">No upcoming milestones</div>
           ) : (
             <div className="space-y-2">
               {upcomingMilestones.map(({ project, milestone }) => {
@@ -348,19 +348,19 @@ export default function Dashboard() {
                   <NavLink
                     key={`${project.id}-${milestone.id}`}
                     to={`/projects/${project.id}`}
-                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group"
                   >
                     <div className={clsx(
                       'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold',
-                      daysUntil <= 3 ? 'bg-red-100 text-red-700' :
-                      daysUntil <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                      daysUntil <= 3 ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300' :
+                      daysUntil <= 7 ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300'
                     )}>
                       {daysUntil}d
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700">{milestone.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{project.title.substring(0, 28)}{project.title.length > 28 ? '…' : ''}</p>
-                      <p className="text-xs text-gray-400">{formatDate(milestone.plannedDate)}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400">{milestone.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{project.title.substring(0, 28)}{project.title.length > 28 ? '…' : ''}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(milestone.plannedDate)}</p>
                     </div>
                   </NavLink>
                 )
@@ -373,24 +373,24 @@ export default function Dashboard() {
       {/* On-time completion chart */}
       {completionData.length > 0 && (
         <div className="card p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-green-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
             Completed Projects — On-Time vs Delayed
           </h2>
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.onTime}</div>
-              <div className="text-xs text-gray-500">Completed On Time</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.onTime}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Completed On Time</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-500">{stats.completedWithDates - stats.onTime}</div>
-              <div className="text-xs text-gray-500">Completed Late</div>
+              <div className="text-2xl font-bold text-red-500 dark:text-red-400">{stats.completedWithDates - stats.onTime}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Completed Late</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats.completedWithDates > 0 ? Math.round(stats.onTime / stats.completedWithDates * 100) : 0}%
               </div>
-              <div className="text-xs text-gray-500">On-Time Rate</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">On-Time Rate</div>
             </div>
           </div>
         </div>

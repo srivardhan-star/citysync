@@ -113,7 +113,7 @@ function ProgressBar({ value }: { value: number }) {
       : 'bg-red-400';
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
       <div
         className={`h-full rounded-full transition-all duration-500 ${color}`}
         style={{ width: `${pct}%` }}
@@ -133,9 +133,9 @@ function PrioritySlider({
 }) {
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-gray-600">
+      <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300">
         <span>{label}</span>
-        <span className="font-semibold text-gray-800">{value}</span>
+        <span className="font-semibold text-gray-800 dark:text-gray-100">{value}</span>
       </div>
       <input
         type="range"
@@ -160,19 +160,19 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <NavLink
       to={`/projects/${project.id}`}
-      className="block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group"
+      className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group"
     >
       {/* Card Header */}
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap gap-1.5 shrink-0">
-            <Badge className={STATUS_COLORS[project.status] ?? 'bg-gray-100 text-gray-700'}>
+            <Badge className={STATUS_COLORS[project.status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}>
               {STATUS_LABELS[project.status] ?? project.status}
             </Badge>
-            <Badge className="bg-indigo-100 text-indigo-800">
+            <Badge className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
               {CATEGORY_LABELS[project.category] ?? project.category}
             </Badge>
-            <Badge className={PRIORITY_COLORS[project.priority] ?? 'bg-gray-100 text-gray-700'}>
+            <Badge className={PRIORITY_COLORS[project.priority] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}>
               {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
             </Badge>
           </div>
@@ -182,12 +182,12 @@ function ProjectCard({ project }: { project: Project }) {
           />
         </div>
 
-        <h3 className="mt-2.5 text-base font-semibold text-gray-900 leading-snug group-hover:text-blue-700 transition-colors line-clamp-2">
+        <h3 className="mt-2.5 text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
           {project.title}
         </h3>
 
         {/* Meta row */}
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
           <span className="flex items-center gap-1">
             <Building2 size={11} />
             {project.department}
@@ -208,19 +208,19 @@ function ProjectCard({ project }: { project: Project }) {
 
       {/* Progress */}
       <div className="px-4 pb-3">
-        <div className="flex justify-between text-xs text-gray-500 mb-1">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
           <span className="flex items-center gap-1">
             <TrendingUp size={11} />
             Progress
           </span>
-          <span className="font-semibold text-gray-700">{project.progress}%</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-200">{project.progress}%</span>
         </div>
         <ProgressBar value={project.progress} />
       </div>
 
       {/* Dates + Delay */}
-      <div className="px-4 pb-3 border-t border-gray-100 pt-3">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+      <div className="px-4 pb-3 border-t border-gray-100 dark:border-gray-700/80 pt-3">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
           <span className="flex items-center gap-1">
             <Calendar size={11} />
             Start: {formatDate(project.startDate)}
@@ -230,7 +230,7 @@ function ProjectCard({ project }: { project: Project }) {
             End: {formatDate(project.plannedEndDate)}
           </span>
           {project.revisedEndDate && (
-            <span className="flex items-center gap-1 text-amber-600">
+            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
               <Clock size={11} />
               Revised: {formatDate(project.revisedEndDate)}
             </span>
@@ -238,7 +238,7 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
 
         {delay.isDelayed && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 font-medium">
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 font-medium">
             <AlertTriangle size={12} />
             {delay.comparisonLabel}
           </div>
@@ -248,9 +248,9 @@ function ProjectCard({ project }: { project: Project }) {
       {/* Milestones */}
       {totalMilestones > 0 && (
         <div className="px-4 pb-3">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             Milestones:{' '}
-            <span className="font-semibold text-gray-700">
+            <span className="font-semibold text-gray-700 dark:text-gray-200">
               {completedMilestones}/{totalMilestones}
             </span>{' '}
             completed
@@ -260,9 +260,9 @@ function ProjectCard({ project }: { project: Project }) {
 
       {/* Priority score */}
       <div className="px-4 pb-4">
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-400 dark:text-gray-500">
           Priority score:{' '}
-          <span className="font-semibold text-gray-600">{project.priorityScore}</span>
+          <span className="font-semibold text-gray-600 dark:text-gray-300">{project.priorityScore}</span>
         </span>
       </div>
     </NavLink>
@@ -356,43 +356,43 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
   }
 
   const inputCls =
-    'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
-  const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
-  const errorCls = 'text-xs text-red-600 mt-1';
+    'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400 dark:placeholder-gray-500';
+  const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+  const errorCls = 'text-xs text-red-600 dark:text-red-400 mt-1';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="relative z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Add New Project</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Add New Project</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               Step {step} of 2 — {step === 1 ? 'Basic Details' : 'Priority & Disruption'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+            className="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Step tabs */}
-        <div className="flex border-b border-gray-200 px-6 gap-4">
+        <div className="flex border-b border-gray-200 dark:border-gray-700 px-6 gap-4">
           {([1, 2] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStep(s)}
               className={`py-2.5 text-sm font-medium border-b-2 transition ${
                 step === s
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               {s === 1 ? 'Basic Details' : 'Priority & Disruption'}
@@ -612,10 +612,10 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
             {step === 2 && (
               <>
                 {/* Priority Inputs */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-blue-900">Priority Score Inputs</h3>
-                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                    <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200">Priority Score Inputs</h3>
+                    <span className="text-xs text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
                       Calculated score:{' '}
                       <strong>
                         {calculatePriorityScore({
@@ -629,7 +629,7 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
                       /100
                     </span>
                   </div>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
                     Rate each factor 0–5. Weights: Safety 30%, Essential 25%, Dependency 20%, Urgency 15%, Disruption 10%.
                   </p>
                   <PrioritySlider
@@ -707,11 +707,11 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-2xl">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/80 rounded-b-2xl">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition"
             >
               Cancel
             </button>
@@ -720,7 +720,7 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 transition"
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                 >
                   Back
                 </button>
@@ -869,18 +869,18 @@ export default function ProjectsPage() {
 
   // ── Filter select class ────────────────────────────────────
   const selectCls =
-    'px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition';
+    'px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* ── Page Header ──────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Title row */}
           <div className="flex items-center justify-between py-4 gap-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Projects</h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Projects</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {displayedProjects.length === state.projects.length
                   ? `${state.projects.length} project${state.projects.length !== 1 ? 's' : ''}`
                   : `${displayedProjects.length} of ${state.projects.length} projects`}
@@ -895,8 +895,8 @@ export default function ProjectsPage() {
                 <span className="hidden sm:inline">Add Project</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-semibold">
-                <Users size={14} className="text-emerald-600" />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-semibold">
+                <Users size={14} className="text-emerald-600 dark:text-emerald-400" />
                 <span>Public Mode · Read-Only View</span>
               </div>
             )}
@@ -908,19 +908,19 @@ export default function ProjectsPage() {
             <div className="relative flex-1 max-w-md">
               <Search
                 size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
               />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setParam('q', e.target.value)}
                 placeholder="Search title, location, contractor…"
-                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400 dark:placeholder-gray-500"
               />
               {query && (
                 <button
                   onClick={() => setParam('q', '')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                 >
                   <X size={14} />
                 </button>
@@ -929,7 +929,7 @@ export default function ProjectsPage() {
 
             {/* Sort */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <SortAsc size={15} className="text-gray-400" />
+              <SortAsc size={15} className="text-gray-400 dark:text-gray-500" />
               <select
                 value={sortKey}
                 onChange={(e) => setParam('sort', e.target.value)}
@@ -948,8 +948,8 @@ export default function ProjectsPage() {
               onClick={() => setShowFilters((v) => !v)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition shrink-0 ${
                 showFilters || activeFilterCount > 0
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                  : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               <Filter size={14} />
@@ -967,7 +967,7 @@ export default function ProjectsPage() {
             <div className="pb-4 flex flex-wrap gap-3 items-center">
               {/* Status */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Status</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Status</span>
                 <select
                   value={filterStatus}
                   onChange={(e) => setParam('status', e.target.value)}
@@ -982,7 +982,7 @@ export default function ProjectsPage() {
 
               {/* Category */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Category</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Category</span>
                 <select
                   value={filterCategory}
                   onChange={(e) => setParam('category', e.target.value)}
@@ -997,7 +997,7 @@ export default function ProjectsPage() {
 
               {/* Department */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Department</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Department</span>
                 <select
                   value={filterDepartment}
                   onChange={(e) => setParam('department', e.target.value)}
@@ -1012,7 +1012,7 @@ export default function ProjectsPage() {
 
               {/* Priority */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Priority</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Priority</span>
                 <select
                   value={filterPriority}
                   onChange={(e) => setParam('priority', e.target.value)}
@@ -1029,7 +1029,7 @@ export default function ProjectsPage() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearAllFilters}
-                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition ml-1"
+                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition ml-1"
                 >
                   <X size={12} />
                   Clear filters
@@ -1045,11 +1045,11 @@ export default function ProjectsPage() {
         {displayedProjects.length === 0 ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search size={28} className="text-gray-400" />
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <Search size={28} className="text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-700">No projects found</h3>
-            <p className="text-sm text-gray-500 mt-1 max-w-sm">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">No projects found</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
               {query || activeFilterCount > 0
                 ? 'Try adjusting your search or filters.'
                 : 'No projects have been created yet. Add the first one!'}
@@ -1059,7 +1059,7 @@ export default function ProjectsPage() {
                 onClick={() => {
                   setSearchParams({});
                 }}
-                className="mt-4 text-sm text-blue-600 hover:text-blue-800 underline transition"
+                className="mt-4 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline transition"
               >
                 Clear all filters
               </button>

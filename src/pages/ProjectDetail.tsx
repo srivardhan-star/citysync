@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   calculateDelay,
   calculatePriorityScore,
@@ -110,12 +111,119 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>
-      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
-        {icon && <span className="text-gray-500">{icon}</span>}
-        <h2 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">{title}</h2>
+    <div
+      className={`rounded-xl border shadow-sm ${className}`}
+      style={{ backgroundColor: 'var(--cs-surface)', borderColor: 'var(--cs-border)' }}
+    >
+      <div
+        className="flex items-center gap-2 px-5 py-3.5 border-b"
+        style={{ borderColor: 'var(--cs-border)' }}
+      >
+        {icon && <span style={{ color: 'var(--cs-muted)' }}>{icon}</span>}
+        <h2
+          className="font-semibold text-sm uppercase tracking-wide"
+          style={{ color: 'var(--cs-text)' }}
+        >
+          {title}
+        </h2>
       </div>
       <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+// ── Milestone Confirmation Dialog ─────────────────────────────
+
+function MilestoneConfirmDialog({
+  milestone,
+  action,
+  onConfirm,
+  onCancel,
+}: {
+  milestone: Milestone;
+  action: 'complete' | 'uncomplete';
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const isCompleting = action === 'complete';
+
+  // Trap focus inside dialog (basic)
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') onCancel();
+  }
+
+  return (
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="milestone-dialog-title"
+      onKeyDown={handleKeyDown}
+    >
+      <div className="modal-panel max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        {/* Icon */}
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+          isCompleting ? 'bg-green-100 dark:bg-green-900/30' : 'bg-amber-100 dark:bg-amber-900/30'
+        }`}>
+          {isCompleting
+            ? <CheckCircle2 size={24} className="text-green-600 dark:text-green-400" />
+            : <Circle size={24} className="text-amber-600 dark:text-amber-400" />
+          }
+        </div>
+
+        {/* Title */}
+        <h3
+          id="milestone-dialog-title"
+          className="text-center text-base font-semibold mb-1"
+          style={{ color: 'var(--cs-text)' }}
+        >
+          {isCompleting ? 'Mark task as completed?' : 'Mark task as incomplete?'}
+        </h3>
+
+        {/* Task name */}
+        <p
+          className="text-center text-sm font-medium mb-3"
+          style={{ color: 'var(--cs-accent)' }}
+        >
+          "{milestone.name}"
+        </p>
+
+        {/* Explanation */}
+        <p
+          className="text-center text-sm mb-6"
+          style={{ color: 'var(--cs-muted)' }}
+        >
+          {isCompleting
+            ? 'This will update the project\'s completion progress.'
+            : 'The project\'s completion progress may decrease.'}
+        </p>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border transition-all hover:scale-[1.01] active:scale-95"
+            style={{
+              backgroundColor: 'var(--cs-elevated)',
+              borderColor: 'var(--cs-border)',
+              color: 'var(--cs-text)',
+            }}
+            autoFocus
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:scale-[1.01] active:scale-95 ${
+              isCompleting ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'
+            }`}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -634,12 +742,19 @@ export default function ProjectDetail() {
     addIssueReport,
     updateIssueReportStatus,
   } = useApp();
+  const { isDark } = useTheme();
 
   const [showEditModal, setShowEditModal]     = useState(false);
   const [showDelayForm, setShowDelayForm]     = useState(false);
   const [showIssueModal, setShowIssueModal]   = useState(false);
   const [respondingIssueId, setRespondingIssueId] = useState<string | null>(null);
   const [responseText, setResponseText]       = useState('');
+  // Milestone confirmation dialog state
+  const [milestoneConfirm, setMilestoneConfirm] = useState<{
+    milestone: Milestone;
+    action: 'complete' | 'uncomplete';
+    submitting: boolean;
+  } | null>(null);
 
   const project = state.projects.find((p) => p.id === id);
 
@@ -670,10 +785,28 @@ export default function ProjectDetail() {
 
   function handleMilestoneToggle(milestone: Milestone) {
     if (!project) return;
-    if (milestone.completed) return; // only mark complete, not undo
+    if (milestoneConfirm?.submitting) return; // prevent double submission
+    // Open confirmation dialog instead of applying immediately
+    setMilestoneConfirm({
+      milestone,
+      action: milestone.completed ? 'uncomplete' : 'complete',
+      submitting: false,
+    });
+  }
 
+  function applyMilestoneToggle(milestone: Milestone, action: 'complete' | 'uncomplete') {
+    if (!project) return;
+    setMilestoneConfirm((prev) => prev ? { ...prev, submitting: true } : null);
+
+    const nowCompleted = action === 'complete';
     const updatedMilestones: Milestone[] = project.milestones.map((m) =>
-      m.id === milestone.id ? { ...m, completed: true, actualDate: today() } : m
+      m.id === milestone.id
+        ? {
+            ...m,
+            completed: nowCompleted,
+            actualDate: nowCompleted ? today() : undefined,
+          }
+        : m
     );
     const progress = calculateMilestoneProgress(updatedMilestones);
 
@@ -681,7 +814,9 @@ export default function ProjectDetail() {
       id: generateId('act'),
       timestamp: new Date().toISOString(),
       type: 'milestone_completed',
-      description: `Milestone completed: "${milestone.name}"`,
+      description: nowCompleted
+        ? `Milestone completed: "${milestone.name}"`
+        : `Milestone re-opened: "${milestone.name}"`,
     };
 
     const updated: Project = {
@@ -693,6 +828,7 @@ export default function ProjectDetail() {
     };
 
     updateProject(updated);
+    setMilestoneConfirm(null);
   }
 
   function handleDelaySubmit(reason: string, notes: string, revisedDate: string) {
@@ -767,8 +903,18 @@ export default function ProjectDetail() {
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--cs-bg)' }}>
       {/* Modals */}
+      {/* Milestone confirmation dialog */}
+      {milestoneConfirm && (
+        <MilestoneConfirmDialog
+          milestone={milestoneConfirm.milestone}
+          action={milestoneConfirm.action}
+          onConfirm={() => applyMilestoneToggle(milestoneConfirm.milestone, milestoneConfirm.action)}
+          onCancel={() => setMilestoneConfirm(null)}
+        />
+      )}
+
       {showEditModal && isGovernment && (
         <EditModal project={project} onSave={handleEditSave} onClose={() => setShowEditModal(false)} />
       )}
@@ -787,7 +933,10 @@ export default function ProjectDetail() {
       )}
 
       {/* ── Top bar ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div
+        className="border-b sticky top-0 z-10"
+        style={{ backgroundColor: 'var(--cs-surface)', borderColor: 'var(--cs-border)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <button
             onClick={() => navigate('/projects')}
@@ -833,7 +982,10 @@ export default function ProjectDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
         {/* ── Header card ── */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div
+          className="rounded-xl border shadow-sm p-6"
+          style={{ backgroundColor: 'var(--cs-surface)', borderColor: 'var(--cs-border)' }}
+        >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -852,9 +1004,9 @@ export default function ProjectDetail() {
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight">{project.title}</h1>
+              <h1 className="text-2xl font-bold leading-tight" style={{ color: 'var(--cs-text)' }}>{project.title}</h1>
               {project.description && (
-                <p className="mt-2 text-sm text-gray-600 max-w-2xl">{project.description}</p>
+                <p className="mt-2 text-sm max-w-2xl" style={{ color: 'var(--cs-muted)' }}>{project.description}</p>
               )}
             </div>
 
@@ -870,18 +1022,18 @@ export default function ProjectDetail() {
 
           {/* Quick stats row */}
           <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 font-medium mb-0.5">Department</p>
-              <p className="text-sm font-semibold text-gray-800">{project.department}</p>
+            <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--cs-elevated)' }}>
+              <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--cs-muted)' }}>Department</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cs-text)' }}>{project.department}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 font-medium mb-0.5">Contractor</p>
-              <p className="text-sm font-semibold text-gray-800">{project.contractorName}</p>
+            <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--cs-elevated)' }}>
+              <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--cs-muted)' }}>Contractor</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cs-text)' }}>{project.contractorName}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 font-medium mb-0.5">Progress</p>
+            <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--cs-elevated)' }}>
+              <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--cs-muted)' }}>Progress</p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div className="flex-1 rounded-full h-2" style={{ backgroundColor: 'var(--cs-border)' }}>
                   <div
                     className={`h-2 rounded-full transition-all ${
                       project.progress >= 100 ? 'bg-green-500' : project.status === 'delayed' ? 'bg-red-500' : 'bg-blue-500'
@@ -889,12 +1041,12 @@ export default function ProjectDetail() {
                     style={{ width: `${Math.min(project.progress, 100)}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-gray-800 shrink-0">{project.progress}%</span>
+                <span className="text-sm font-semibold shrink-0" style={{ color: 'var(--cs-text)' }}>{project.progress}%</span>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 font-medium mb-0.5">Delay Status</p>
-              <p className={`text-sm font-semibold ${delay.isDelayed ? 'text-red-600' : 'text-green-600'}`}>
+            <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--cs-elevated)' }}>
+              <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--cs-muted)' }}>Delay Status</p>
+              <p className={`text-sm font-semibold ${delay.isDelayed ? 'text-red-500' : 'text-green-500'}`}>
                 {delay.comparisonLabel}
               </p>
             </div>
@@ -908,31 +1060,44 @@ export default function ProjectDetail() {
             {/* Milestones */}
             <SectionCard title="Milestones" icon={<CheckCircle2 size={16} />}>
               {project.milestones.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">No milestones recorded for this project.</p>
+                <p className="text-sm italic" style={{ color: 'var(--cs-muted)' }}>No milestones recorded for this project.</p>
               ) : (
                 <div className="space-y-3">
                   {project.milestones.map((m) => (
                     <div key={m.id}
-                      className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                        m.completed ? 'bg-green-50 border-green-100' : 'bg-white border-gray-100 hover:border-blue-200'
-                      }`}
+                      className="flex items-start gap-3 p-3 rounded-lg border transition-all"
+                      style={{
+                        backgroundColor: m.completed
+                          ? 'rgba(34,197,94,0.08)'
+                          : 'var(--cs-elevated)',
+                        borderColor: m.completed
+                          ? 'rgba(34,197,94,0.25)'
+                          : 'var(--cs-border)',
+                      }}
                     >
                       <button
                         onClick={() => isGovernment && handleMilestoneToggle(m)}
-                        disabled={!isGovernment || m.completed}
-                        className={`mt-0.5 shrink-0 transition-colors ${
+                        disabled={!isGovernment}
+                        className={`mt-0.5 shrink-0 transition-all hover:scale-110 active:scale-90 ${
                           m.completed
-                            ? 'text-green-500 cursor-default'
+                            ? 'text-green-500 cursor-pointer'
                             : isGovernment
-                            ? 'text-gray-300 hover:text-blue-500 cursor-pointer'
+                            ? 'text-gray-400 hover:text-blue-500 cursor-pointer'
                             : 'text-gray-300 cursor-default opacity-60'
                         }`}
                         title={
-                          m.completed
-                            ? 'Completed'
-                            : isGovernment
-                            ? 'Click to mark milestone complete'
-                            : 'Milestone pending (Government official authorization required)'
+                          !isGovernment
+                            ? 'Government official authorization required'
+                            : m.completed
+                            ? 'Click to mark milestone incomplete'
+                            : 'Click to mark milestone complete'
+                        }
+                        aria-label={
+                          !isGovernment
+                            ? 'Milestone toggle (read-only)'
+                            : m.completed
+                            ? `Uncheck milestone: ${m.name}`
+                            : `Check milestone: ${m.name}`
                         }
                       >
                         {m.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
@@ -940,16 +1105,19 @@ export default function ProjectDetail() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className={`text-sm font-medium ${m.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                          <p
+                            className={`text-sm font-medium ${m.completed ? 'line-through' : ''}`}
+                            style={{ color: m.completed ? 'var(--cs-muted)' : 'var(--cs-text)' }}
+                          >
                             {m.name}
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--cs-muted)' }}>
                             <span className="flex items-center gap-1">
                               <Calendar size={11} />
                               Planned: {formatDate(m.plannedDate)}
                             </span>
                             {m.completed && m.actualDate && (
-                              <span className="flex items-center gap-1 text-green-600">
+                              <span className="flex items-center gap-1 text-green-500">
                                 <CheckCircle2 size={11} />
                                 Done: {formatDate(m.actualDate)}
                               </span>
@@ -957,10 +1125,10 @@ export default function ProjectDetail() {
                           </div>
                         </div>
                         {m.description && (
-                          <p className="text-xs text-gray-400 mt-0.5">{m.description}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--cs-muted)' }}>{m.description}</p>
                         )}
                         {m.notes && (
-                          <p className="text-xs text-indigo-500 mt-0.5 italic">{m.notes}</p>
+                          <p className="text-xs text-indigo-400 mt-0.5 italic">{m.notes}</p>
                         )}
                       </div>
                     </div>
@@ -1308,6 +1476,70 @@ export default function ProjectDetail() {
             )}
           </div>
         </div>
+
+        {/* Milestone Confirmation Dialog */}
+        {milestoneConfirm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div
+              className="modal-panel max-w-md w-full p-6 space-y-4 rounded-2xl border shadow-2xl animate-scale-in"
+              style={{ backgroundColor: 'var(--cs-surface)', borderColor: 'var(--cs-border)', color: 'var(--cs-text)' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-full ${milestoneConfirm.action === 'complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
+                  <AlertCircle size={22} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">
+                    {milestoneConfirm.action === 'complete' ? 'Mark Milestone Complete?' : 'Re-open Milestone?'}
+                  </h3>
+                  <p className="text-xs" style={{ color: 'var(--cs-muted)' }}>
+                    Project: <span className="font-medium" style={{ color: 'var(--cs-text)' }}>{project.title}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border text-xs leading-relaxed space-y-1" style={{ backgroundColor: 'var(--cs-elevated)', borderColor: 'var(--cs-border)' }}>
+                <p className="font-semibold" style={{ color: 'var(--cs-text)' }}>
+                  "{milestoneConfirm.milestone.name}"
+                </p>
+                <p style={{ color: 'var(--cs-muted)' }}>
+                  {milestoneConfirm.action === 'complete'
+                    ? 'This will update overall project completion stats and log an official milestone completion activity entry.'
+                    : 'This will revert this milestone to pending state, adjust project completion progress accordingly, and log an activity entry.'}
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={milestoneConfirm.submitting}
+                  onClick={() => setMilestoneConfirm(null)}
+                  className="btn-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={milestoneConfirm.submitting}
+                  onClick={() => applyMilestoneToggle(milestoneConfirm.milestone, milestoneConfirm.action)}
+                  className={`px-4 py-2 text-xs font-semibold rounded-lg text-white transition-all shadow-sm flex items-center gap-1.5 ${
+                    milestoneConfirm.action === 'complete'
+                      ? 'bg-green-600 hover:bg-green-700 active:scale-95'
+                      : 'bg-amber-600 hover:bg-amber-700 active:scale-95'
+                  }`}
+                >
+                  {milestoneConfirm.submitting ? (
+                    'Updating...'
+                  ) : milestoneConfirm.action === 'complete' ? (
+                    'Confirm Completion'
+                  ) : (
+                    'Confirm Re-opening'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
