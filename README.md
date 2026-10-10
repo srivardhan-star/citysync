@@ -1,6 +1,27 @@
-# 🏙️ CitySync — Chennai Infrastructure Transparency Portal
+**PROBLEM STATEMENT**
+**CivicTech**- Improving Transparency and Coordination in Public Works Projects
+CONTEXT: Residents see roads dug up, drains under repair, and pipelines being laid in their
+neighbourhoods every day. These projects are carried out by different municipal and utility
+departments and contractors. Residents have little information about what is being done,
+who is responsible, or how long it will take, and the departments themselves often work
+without knowing what others have planned.
 
-> **Hackathon MVP Deliverable** — A full-stack CivicTech web application for Chennai, built to eliminate uncoordinated road excavations, provide complete public visibility into city infrastructure works, detect and resolve scheduling conflicts, and bridge government administration with citizen accountability.
+**PROBLEM**- Information about ongoing and planned public works is scattered across offices,
+notice boards, and informal sources, and rarely reaches the people it affects. Residents
+cannot tell the purpose, timeline, or responsible authority of a project, or why it is delayed.
+Poor coordination means the same road may be dug up several times in a few months by
+different departments. When work stalls or is done badly, there is no simple way to follow up,
+verify progress, or hold anyone accountable. Deadlines slip without explanation, and
+residents have no reliable way to plan around disruptions.
+
+**IMPACT**- Prolonged and repeated construction causes traffic problems, safety hazards,
+business losses, and daily inconvenience. Wasted public money from poor coordination and
+duplicated work goes unnoticed. Without transparency, trust in local authorities falls, and
+residents feel unheard. Authorities also lose the chance to use citizen feedback to catch
+problems early.
+
+
+# 🏙️ CitySync — Chennai Infrastructure Transparency Portal
 
 > ⚠️ **Demo Mode & Data Disclaimer** — All project records, civic issues, contractor names, contact details, and map coordinates in this application are **simulated for demonstration purposes only**. These are not verified live reports from the Greater Chennai Corporation (GCC), CMDA, TANGEDCO, or any official government body.
 
