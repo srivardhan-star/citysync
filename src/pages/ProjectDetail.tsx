@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Eye,
   Check,
+  RotateCcw,
 } from 'lucide-react';
 
 import { useApp } from '../context/AppContext';
@@ -621,7 +622,120 @@ function ReportIssueModal({
   );
 }
 
+// ── Milestone Confirmation Modal ───────────────────────────────
+
+interface MilestoneConfirmState {
+  milestone: Milestone;
+  action: 'complete' | 'undo';
+}
+
+function MilestoneConfirmationModal({
+  confirmState,
+  onConfirm,
+  onClose,
+}: {
+  confirmState: MilestoneConfirmState;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const isComplete = confirmState.action === 'complete';
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="milestone-modal-title"
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden">
+        <div
+          className={`flex items-center justify-between px-6 py-4 border-b border-gray-100 ${
+            isComplete ? 'bg-blue-50/70 text-blue-900' : 'bg-amber-50/70 text-amber-900'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {isComplete ? (
+              <CheckCircle2 size={20} className="text-blue-600 shrink-0" />
+            ) : (
+              <RotateCcw size={20} className="text-amber-600 shrink-0" />
+            )}
+            <h2 id="milestone-modal-title" className="font-bold text-gray-900 text-base">
+              {isComplete ? 'Confirm milestone completion' : 'Confirm reversing milestone'}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {isComplete ? (
+              <>
+                Are you sure you want to mark milestone{' '}
+                <strong className="text-gray-900">"{confirmState.milestone.name}"</strong> as complete?
+              </>
+            ) : (
+              <>
+                Are you sure you want to undo completion for milestone{' '}
+                <strong className="text-gray-900">"{confirmState.milestone.name}"</strong>?
+              </>
+            )}
+          </p>
+
+          <div
+            className={`p-3.5 rounded-xl text-xs leading-relaxed border ${
+              isComplete
+                ? 'bg-blue-50/50 border-blue-100 text-blue-800'
+                : 'bg-amber-50/50 border-amber-100 text-amber-800'
+            }`}
+          >
+            {isComplete ? (
+              <span>
+                Confirming will update its status to completed, record today's date, and recalculate overall project progress.
+              </span>
+            ) : (
+              <span>
+                Confirming will restore this milestone to incomplete status, clear its completion date, and recalculate overall project progress.
+              </span>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className={`px-5 py-2 text-sm rounded-lg text-white font-medium transition-colors shadow-sm ${
+                isComplete
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              {isComplete ? 'Yes, mark complete' : 'Yes, undo completion'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ────────────────────────────────────────────────
+
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -638,6 +752,7 @@ export default function ProjectDetail() {
   const [showEditModal, setShowEditModal]     = useState(false);
   const [showDelayForm, setShowDelayForm]     = useState(false);
   const [showIssueModal, setShowIssueModal]   = useState(false);
+  const [milestoneConfirm, setMilestoneConfirm] = useState<MilestoneConfirmState | null>(null);
   const [respondingIssueId, setRespondingIssueId] = useState<string | null>(null);
   const [responseText, setResponseText]       = useState('');
 
@@ -668,31 +783,63 @@ export default function ProjectDetail() {
 
   // ── Handlers ─────────────────────────────────────────────
 
-  function handleMilestoneToggle(milestone: Milestone) {
-    if (!project) return;
-    if (milestone.completed) return; // only mark complete, not undo
+  function handleInitiateMilestoneAction(milestone: Milestone, action: 'complete' | 'undo') {
+    if (!isGovernment) return;
+    setMilestoneConfirm({ milestone, action });
+  }
 
-    const updatedMilestones: Milestone[] = project.milestones.map((m) =>
-      m.id === milestone.id ? { ...m, completed: true, actualDate: today() } : m
-    );
-    const progress = calculateMilestoneProgress(updatedMilestones);
+  function handleConfirmMilestoneAction() {
+    if (!project || !isGovernment || !milestoneConfirm) return;
+    const { milestone, action } = milestoneConfirm;
 
-    const entry: ActivityEntry = {
-      id: generateId('act'),
-      timestamp: new Date().toISOString(),
-      type: 'milestone_completed',
-      description: `Milestone completed: "${milestone.name}"`,
-    };
+    if (action === 'complete') {
+      const updatedMilestones: Milestone[] = project.milestones.map((m) =>
+        m.id === milestone.id ? { ...m, completed: true, actualDate: today() } : m
+      );
+      const progress = calculateMilestoneProgress(updatedMilestones);
 
-    const updated: Project = {
-      ...project,
-      milestones: updatedMilestones,
-      progress,
-      activityHistory: [entry, ...project.activityHistory],
-      updatedAt: new Date().toISOString(),
-    };
+      const entry: ActivityEntry = {
+        id: generateId('act'),
+        timestamp: new Date().toISOString(),
+        type: 'milestone_completed',
+        description: `Milestone completed: "${milestone.name}"`,
+      };
 
-    updateProject(updated);
+      const updated: Project = {
+        ...project,
+        milestones: updatedMilestones,
+        progress,
+        activityHistory: [entry, ...project.activityHistory],
+        updatedAt: new Date().toISOString(),
+      };
+
+      updateProject(updated);
+    } else {
+      // Undo completion
+      const updatedMilestones: Milestone[] = project.milestones.map((m) =>
+        m.id === milestone.id ? { ...m, completed: false, actualDate: undefined } : m
+      );
+      const progress = calculateMilestoneProgress(updatedMilestones);
+
+      const entry: ActivityEntry = {
+        id: generateId('act'),
+        timestamp: new Date().toISOString(),
+        type: 'progress_updated',
+        description: `Milestone completion reversed: "${milestone.name}"`,
+      };
+
+      const updated: Project = {
+        ...project,
+        milestones: updatedMilestones,
+        progress,
+        activityHistory: [entry, ...project.activityHistory],
+        updatedAt: new Date().toISOString(),
+      };
+
+      updateProject(updated);
+    }
+
+    setMilestoneConfirm(null);
   }
 
   function handleDelaySubmit(reason: string, notes: string, revisedDate: string) {
@@ -783,6 +930,13 @@ export default function ProjectDetail() {
             setShowIssueModal(false);
           }}
           onClose={() => setShowIssueModal(false)}
+        />
+      )}
+      {milestoneConfirm && isGovernment && (
+        <MilestoneConfirmationModal
+          confirmState={milestoneConfirm}
+          onConfirm={handleConfirmMilestoneAction}
+          onClose={() => setMilestoneConfirm(null)}
         />
       )}
 
@@ -918,7 +1072,7 @@ export default function ProjectDetail() {
                       }`}
                     >
                       <button
-                        onClick={() => isGovernment && handleMilestoneToggle(m)}
+                        onClick={() => isGovernment && !m.completed && handleInitiateMilestoneAction(m, 'complete')}
                         disabled={!isGovernment || m.completed}
                         className={`mt-0.5 shrink-0 transition-colors ${
                           m.completed
@@ -931,7 +1085,7 @@ export default function ProjectDetail() {
                           m.completed
                             ? 'Completed'
                             : isGovernment
-                            ? 'Click to mark milestone complete'
+                            ? 'Click to mark milestone complete (requires confirmation)'
                             : 'Milestone pending (Government official authorization required)'
                         }
                       >
@@ -953,6 +1107,17 @@ export default function ProjectDetail() {
                                 <CheckCircle2 size={11} />
                                 Done: {formatDate(m.actualDate)}
                               </span>
+                            )}
+                            {m.completed && isGovernment && (
+                              <button
+                                type="button"
+                                onClick={() => handleInitiateMilestoneAction(m, 'undo')}
+                                className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded transition-colors font-medium cursor-pointer"
+                                title="Undo milestone completion (requires confirmation)"
+                              >
+                                <RotateCcw size={11} />
+                                Undo completion
+                              </button>
                             )}
                           </div>
                         </div>

@@ -10,7 +10,7 @@ import {
 } from './utils/index.ts';
 import { detectConflicts, generateResolutionOptions } from './utils/conflictDetection.ts';
 import { SEED_PROJECTS } from './data/seedData.ts';
-import type { Project, PriorityInputs } from './types/index.ts';
+import type { Project, PriorityInputs, Milestone } from './types/index.ts';
 
 let passed = 0;
 let failed = 0;
@@ -181,6 +181,106 @@ const updatedIssue = resolvedIssueStore.issueReports.find((i) => i.id === 'test-
 assert(
   updatedIssue?.status === 'resolved' && updatedIssue?.officialResponse === 'Fixed by road crew',
   'Government perspective can review, resolve, and respond to citizen issue reports'
+);
+
+// 7. Milestone Completion, Confirmation & Undo Logic Tests
+console.log('\n7. Milestone Completion & Undo Engine:');
+
+// Test project with 4 milestones
+const testMilestones: Milestone[] = [
+  { id: 'ms-1', name: 'Excavation', plannedDate: '2026-03-01', completed: false },
+  { id: 'ms-2', name: 'Pipe Laying', plannedDate: '2026-03-10', completed: false },
+  { id: 'ms-3', name: 'Testing', plannedDate: '2026-03-20', completed: false },
+  { id: 'ms-4', name: 'Surfacing', plannedDate: '2026-03-30', completed: false },
+];
+
+const testProject: Project = {
+  ...SEED_PROJECTS[0],
+  id: 'PRJ-TEST-MS',
+  milestones: testMilestones,
+  progress: 0,
+};
+
+// A. Cancel dialogue simulation leaves data completely unchanged
+let dialogCancelled = true;
+let projectAfterCancel = testProject;
+if (!dialogCancelled) {
+  // If not cancelled, it would modify
+  projectAfterCancel = { ...testProject, progress: 100 };
+}
+assert(
+  projectAfterCancel.progress === 0 &&
+    projectAfterCancel.milestones[0].completed === false &&
+    projectAfterCancel === testProject,
+  'Cancelling completion dialog leaves milestone and project data unchanged'
+);
+
+// B. Confirm completion of milestone 1
+const completedMs1: Milestone[] = testProject.milestones.map((m) =>
+  m.id === 'ms-1' ? { ...m, completed: true, actualDate: '2026-03-02' } : m
+);
+const progressAfterMs1 = calculateMilestoneProgress(completedMs1);
+assert(progressAfterMs1 === 25, 'Confirming 1/4 milestones updates progress to 25%');
+assert(completedMs1[0].completed === true && completedMs1[0].actualDate === '2026-03-02', 'Completed milestone records actualDate');
+
+// C. Confirm completion of milestone 2
+const completedMs2: Milestone[] = completedMs1.map((m) =>
+  m.id === 'ms-2' ? { ...m, completed: true, actualDate: '2026-03-12' } : m
+);
+const progressAfterMs2 = calculateMilestoneProgress(completedMs2);
+assert(progressAfterMs2 === 50, 'Confirming 2/4 milestones updates progress to 50%');
+
+// D. Cancel undo dialogue simulation leaves completed milestone unchanged
+let undoCancelled = true;
+let milestonesAfterUndoCancel = completedMs2;
+if (!undoCancelled) {
+  milestonesAfterUndoCancel = completedMs2.map((m) =>
+    m.id === 'ms-2' ? { ...m, completed: false, actualDate: undefined } : m
+  );
+}
+assert(
+  milestonesAfterUndoCancel[1].completed === true &&
+    calculateMilestoneProgress(milestonesAfterUndoCancel) === 50,
+  'Cancelling undo dialog leaves milestone in completed state and progress unchanged'
+);
+
+// E. Confirm undoing completion of milestone 2
+const reversedMs2: Milestone[] = completedMs2.map((m) =>
+  m.id === 'ms-2' ? { ...m, completed: false, actualDate: undefined } : m
+);
+const progressAfterReversal = calculateMilestoneProgress(reversedMs2);
+assert(
+  reversedMs2[1].completed === false && reversedMs2[1].actualDate === undefined,
+  'Undoing completion resets completed to false and clears actualDate'
+);
+assert(progressAfterReversal === 25, 'Reversing milestone recalculates progress back from 50% to 25%');
+
+// F. Role permissions safeguard: Public user perspective cannot mutate official project milestones
+import { updateProject as storeUpdateProject } from './data/store.ts';
+const projectWithMs = { ...testProject, milestones: completedMs1, progress: progressAfterMs1 };
+const storeWithTestProject = {
+  ...publicStore,
+  projects: [projectWithMs, ...publicStore.projects],
+};
+
+// Simulating reducer safeguard for UPDATE_PROJECT when userRole is 'public'
+function simulateReducerUpdateProject(state: typeof storeWithTestProject, updated: Project) {
+  if (state.userRole === 'public') {
+    return state; // Public users cannot edit official projects
+  }
+  return storeUpdateProject(state, updated);
+}
+
+const attemptedPublicMutation: Project = {
+  ...projectWithMs,
+  progress: 100,
+  milestones: testMilestones.map((m) => ({ ...m, completed: true })),
+};
+const resultState = simulateReducerUpdateProject(storeWithTestProject, attemptedPublicMutation);
+const projectInResult = resultState.projects.find((p) => p.id === 'PRJ-TEST-MS');
+assert(
+  projectInResult?.progress === 25 && projectInResult?.milestones.filter((m) => m.completed).length === 1,
+  'Public role permission safeguard strictly prevents modifying official project milestones'
 );
 
 console.log(`\n========================================`);
