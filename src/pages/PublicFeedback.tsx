@@ -40,6 +40,7 @@ import {
 } from 'recharts';
 
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../context/LanguageContext';
 import {
   calculateDelay,
   formatDate,
@@ -60,6 +61,7 @@ export default function PublicFeedback() {
     isGovernment,
     isPublic,
   } = useApp();
+  const { t } = useTranslation();
   const { projects, reviews, issueReports } = state;
 
   // Tab state between Reviews and Issue Reports
@@ -272,10 +274,10 @@ export default function PublicFeedback() {
           Public Transparency & Oversight
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
-          Public Feedback & Accountability
+          {isGovernment ? t('feedback.title') : t('feedback.titlePublic')}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-2xl">
-          Empowering citizens with direct visibility into city public works, detour guides, contractor accountability, and community ratings for completed infrastructure.
+          {t('feedback.subtitle')}
         </p>
       </div>
 

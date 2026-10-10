@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../context/LanguageContext';
 import { generateResolutionOptions } from '../utils/conflictDetection';
 import {
   formatDate,
@@ -40,6 +41,7 @@ import type { Conflict, ConflictResolutionOption, Project } from '../types';
 
 export default function ConflictDetection() {
   const { state, applyResolution, isGovernment, isPublic } = useApp();
+  const { t } = useTranslation();
   const { projects, conflicts } = state;
 
   // Selected resolution modal state
@@ -107,10 +109,10 @@ export default function ConflictDetection() {
               Automated Coordination Engine
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
-              Conflict Detection & Coordination
+              {isGovernment ? t('conflicts.title') : t('conflicts.titlePublic')}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-2xl">
-              Deterministic spatial & temporal overlap detection preventing repeated excavation, redundant road digs, and concurrent closures across municipal departments.
+              {t('conflicts.subtitle')}
             </p>
           </div>
 
