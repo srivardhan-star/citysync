@@ -2,11 +2,13 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, FolderOpen, AlertTriangle, MessageSquare,
   BarChart3, Bell, RefreshCw, ChevronRight, Zap, X, CheckCheck,
-  Menu, Shield, Building2, Users, Eye, Map, Sun, Moon
+  Menu, Shield, Building2, Users, Map, Sun, Moon, LogOut, ArrowLeft
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { useTheme } from '../context/ThemeContext'
+import { useTranslation, LanguageSelector } from '../context/LanguageContext'
+import { getStoredSession, clearSession } from '../config/authConfig'
 import { formatDateTime } from '../utils'
 import clsx from 'clsx'
 
@@ -36,6 +38,7 @@ export default function Layout() {
   } = useApp()
 
   const { isDark, toggleTheme } = useTheme()
+  const { t } = useTranslation()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -43,6 +46,16 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const notifRef = useRef<HTMLDivElement>(null)
+
+  const session = getStoredSession()
+
+  // Ensure unauthenticated visitors default to public perspective
+  useEffect(() => {
+    const currentSession = getStoredSession()
+    if (!currentSession && userRole === 'government') {
+      setUserRole('public')
+    }
+  }, [userRole, setUserRole])
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -63,29 +76,48 @@ export default function Layout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
+  const handleLogout = () => {
+    clearSession()
+    setUserRole('public')
+    navigate('/')
+  }
+
+  const handleSetGovPerspective = () => {
+    const activeSession = getStoredSession()
+    if (!activeSession || !activeSession.isAuthenticated) {
+      navigate('/login', { state: { from: location.pathname } })
+      return
+    }
+    setUserRole('government')
+  }
+
+  const handleSetPublicPerspective = () => {
+    setUserRole('public')
+  }
+
   const navItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
     {
       to: '/projects',
       icon: FolderOpen,
-      label: isGovernment ? 'Public Works Projects' : 'Explore Projects',
+      label: isGovernment ? t('nav.projects') : t('nav.projectsPublic'),
     },
     {
       to: '/map',
       icon: Map,
-      label: 'Chennai Infrastructure Map',
+      label: t('nav.map'),
     },
     {
       to: '/conflicts',
       icon: AlertTriangle,
-      label: isGovernment ? 'Conflict Detection' : 'Coordination Viewer',
+      label: isGovernment ? t('nav.conflicts') : t('nav.conflictsPublic'),
     },
     {
       to: '/feedback',
       icon: MessageSquare,
-      label: isGovernment ? 'Citizen Feedback & Issues' : 'Public Feedback & Issues',
+      label: isGovernment ? t('nav.feedback') : t('nav.feedbackPublic'),
     },
-    { to: '/reports', icon: BarChart3, label: 'Reports & Analytics' },
+    { to: '/reports', icon: BarChart3, label: t('nav.reports') },
   ]
 
   function handleReset() {
@@ -115,18 +147,22 @@ export default function Layout() {
         )}
         style={{ background: 'var(--cs-sidebar-bg)' }}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
+        {/* Logo / Brand Link to Landing */}
+        <div
+          className="flex items-center gap-3 px-4 py-5 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
+          onClick={() => navigate('/')}
+          title="Return to CitySync Landing Page"
+        >
           <div className="w-9 h-9 bg-blue-400 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="font-bold text-white text-lg leading-none">CitySync</div>
-            <div className="text-blue-300 text-xs mt-0.5">Chennai Infrastructure Portal</div>
+            <div className="font-bold text-white text-lg leading-none">{t('app.name')}</div>
+            <div className="text-blue-300 text-xs mt-0.5">{t('app.portalSub')}</div>
           </div>
           <button
             className="ml-auto lg:hidden text-blue-300 hover:text-white transition-colors"
-            onClick={() => setSidebarOpen(false)}
+            onClick={(e) => { e.stopPropagation(); setSidebarOpen(false) }}
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -136,7 +172,9 @@ export default function Layout() {
         {/* Perspective Status Indicator in Sidebar */}
         <div className="mx-4 mt-3 px-3 py-2.5 rounded-lg border text-xs transition-colors bg-white/5 border-white/10">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-blue-200 uppercase tracking-wider font-semibold">Active Perspective</span>
+            <span className="text-[11px] text-blue-200 uppercase tracking-wider font-semibold">
+              {t('nav.activePerspective')}
+            </span>
             <span
               className={clsx(
                 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
@@ -145,13 +183,11 @@ export default function Layout() {
                   : 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/30'
               )}
             >
-              {isGovernment ? 'Government' : 'Public'}
+              {isGovernment ? t('nav.perspectiveGov') : t('nav.perspectivePublic')}
             </span>
           </div>
           <p className="text-[11px] text-gray-300 mt-1">
-            {isGovernment
-              ? 'Full management, conflict resolution & project editing privileges.'
-              : 'Read-only municipal transparency, feedback & issue reporting.'}
+            {isGovernment ? t('nav.govActiveNote') : t('nav.publicActiveNote')}
           </p>
         </div>
 
@@ -159,7 +195,7 @@ export default function Layout() {
         <div className="mx-4 mt-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg">
           <div className="flex items-center gap-1.5 text-amber-300 text-xs font-medium">
             <Zap className="w-3 h-3" />
-            Demo Environment
+            {t('app.demoEnv')}
           </div>
         </div>
 
@@ -185,31 +221,50 @@ export default function Layout() {
           <div className="mx-4 mb-2 px-3 py-2 bg-orange-500/20 border border-orange-500/30 rounded-lg animate-fade-in">
             <div className="flex items-center gap-2 text-orange-300 text-xs font-medium">
               <AlertTriangle className="w-3 h-3" />
-              {activeConflicts} Active Conflict{activeConflicts !== 1 ? 's' : ''}
+              {activeConflicts} {t('nav.activeConflicts')}
             </div>
           </div>
         )}
 
-        {/* Reset data */}
-        <div className="px-4 pb-4 border-t border-white/10 pt-3">
+        {/* Back to Home & Logout button in sidebar */}
+        <div className="px-4 pb-2 border-t border-white/10 pt-3 space-y-1.5">
+          <button
+            onClick={() => navigate('/')}
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t('auth.backToHome')}</span>
+          </button>
+
+          {session && isGovernment && (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-300 hover:bg-rose-500/20 hover:text-rose-100 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{t('nav.logout')}</span>
+            </button>
+          )}
+
+          {/* Reset demo data */}
           <button
             onClick={handleReset}
             className={clsx(
-              'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-95',
+              'w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95',
               resetConfirm
                 ? 'bg-red-500/30 text-red-200 border border-red-500/40'
                 : 'text-blue-300 hover:bg-white/10 hover:text-white'
             )}
           >
             <RefreshCw className="w-3 h-3" />
-            {resetConfirm ? 'Click again to confirm reset' : 'Reset Demo Data'}
+            {resetConfirm ? t('nav.confirmReset') : t('nav.resetDemoData')}
           </button>
           {resetConfirm && (
             <button
               onClick={() => setResetConfirm(false)}
-              className="w-full text-xs text-blue-400 hover:text-blue-200 mt-1 text-center transition-colors"
+              className="w-full text-xs text-blue-400 hover:text-blue-200 mt-0.5 text-center transition-colors"
             >
-              Cancel
+              {t('app.cancel')}
             </button>
           )}
         </div>
@@ -237,7 +292,7 @@ export default function Layout() {
               className="text-xs font-medium hidden sm:inline"
               style={{ color: 'var(--cs-muted)' }}
             >
-              Perspective:
+              {t('nav.perspective')}:
             </span>
             <div
               className="inline-flex p-1 rounded-xl border shadow-inner"
@@ -245,7 +300,7 @@ export default function Layout() {
             >
               <button
                 type="button"
-                onClick={() => setUserRole('government')}
+                onClick={handleSetGovPerspective}
                 className={clsx(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95',
                   isGovernment
@@ -253,14 +308,14 @@ export default function Layout() {
                     : 'hover:text-gray-900 dark:hover:text-gray-100'
                 )}
                 style={!isGovernment ? { color: 'var(--cs-muted)' } : undefined}
-                title="Switch to Municipal Government perspective"
+                title="Switch to Municipal Government perspective (requires login)"
               >
                 <Building2 className="w-3.5 h-3.5" />
-                <span>Government</span>
+                <span>{t('nav.perspectiveGov')}</span>
               </button>
               <button
                 type="button"
-                onClick={() => setUserRole('public')}
+                onClick={handleSetPublicPerspective}
                 className={clsx(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95',
                   isPublic
@@ -271,14 +326,14 @@ export default function Layout() {
                 title="Switch to Citizen / Public Resident perspective"
               >
                 <Users className="w-3.5 h-3.5" />
-                <span>Public</span>
+                <span>{t('nav.perspectivePublic')}</span>
               </button>
             </div>
             <span
               className="text-[11px] hidden md:inline italic"
               style={{ color: 'var(--cs-muted)' }}
             >
-              ({isGovernment ? 'Admin Actions Active' : 'Resident View'})
+              ({isGovernment ? t('nav.govAdminBadge') : t('nav.publicResidentBadge')})
             </span>
           </div>
 
@@ -291,10 +346,13 @@ export default function Layout() {
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-full text-orange-700 dark:text-orange-300 text-xs font-medium hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
             >
               <AlertTriangle className="w-3.5 h-3.5" />
-              {activeConflicts} conflict{activeConflicts !== 1 ? 's' : ''}
+              {activeConflicts} {activeConflicts !== 1 ? t('nav.activeConflicts') : t('nav.conflicts')}
               <ChevronRight className="w-3 h-3" />
             </NavLink>
           )}
+
+          {/* ── Multilingual Language Selector ── */}
+          <LanguageSelector variant="header" />
 
           {/* ── Dark / Light theme toggle ── */}
           <button
@@ -340,7 +398,7 @@ export default function Layout() {
                   style={{ borderColor: 'var(--cs-border)' }}
                 >
                   <span className="font-semibold text-sm" style={{ color: 'var(--cs-text)' }}>
-                    Notifications
+                    {t('nav.notifications')}
                   </span>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
@@ -349,7 +407,7 @@ export default function Layout() {
                         className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1 transition-colors"
                       >
                         <CheckCheck className="w-3.5 h-3.5" />
-                        Mark all read
+                        {t('nav.markAllRead')}
                       </button>
                     )}
                     <button
@@ -365,7 +423,7 @@ export default function Layout() {
                 <div className="max-h-80 overflow-y-auto scrollbar-thin divide-y" style={{ borderColor: 'var(--cs-border)' }}>
                   {state.notifications.length === 0 ? (
                     <div className="px-4 py-8 text-center text-sm" style={{ color: 'var(--cs-muted)' }}>
-                      No notifications
+                      {t('nav.noNotifications')}
                     </div>
                   ) : (
                     state.notifications.slice(0, 15).map((n, idx) => (
@@ -409,6 +467,20 @@ export default function Layout() {
               </div>
             )}
           </div>
+
+          {/* Government Logout Action Button in Header */}
+          {session && isGovernment && (
+            <button
+              id="header-gov-logout-btn"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/40 active:scale-95 transition-all shadow-sm"
+              title={t('nav.logout')}
+              aria-label={t('nav.logout')}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">{t('nav.logout')}</span>
+            </button>
+          )}
         </header>
 
         {/* Page content */}
@@ -424,4 +496,3 @@ export default function Layout() {
     </div>
   )
 }
-

@@ -19,6 +19,7 @@ import {
   List, X, Info
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { useTranslation } from '../context/LanguageContext'
 import { formatDate, STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from '../utils'
 import clsx from 'clsx'
 import type { Project, ProjectCategory, ProjectStatus } from '../types'
@@ -83,6 +84,7 @@ function MapFlyTo({ target }: { target: [number, number] | null }) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function ChennaiMap() {
   const { state } = useApp()
+  const { t } = useTranslation()
 
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | 'all'>('all')
@@ -144,7 +146,7 @@ export default function ChennaiMap() {
               <Map className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Chennai Infrastructure Map</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('map.title')}</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {mappableProjects.length} project{mappableProjects.length !== 1 ? 's' : ''} shown · Centered on Chennai, Tamil Nadu
               </p>
@@ -426,7 +428,7 @@ export default function ChennaiMap() {
           {(Object.entries(CATEGORY_ICONS) as [ProjectCategory, string][]).map(([cat, icon]) => (
             <span key={cat} className="flex items-center gap-1">
               <span>{icon}</span>
-              {CATEGORY_LABELS[cat]}
+              {t(`category.${cat}`, CATEGORY_LABELS[cat])}
             </span>
           ))}
         </div>

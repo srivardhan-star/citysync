@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 
 import { useApp } from '../context/AppContext';
+import { useTranslation } from '../context/LanguageContext';
 import {
   calculateDelay,
   formatDate,
@@ -128,6 +129,7 @@ function SectionHeader({ title, sub }: { title: string; sub?: string }) {
 
 export default function Reports() {
   const { state } = useApp();
+  const { t } = useTranslation();
 
   const [deptFilter, setDeptFilter] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -368,7 +370,7 @@ export default function Reports() {
           <div className="flex items-center gap-2 flex-1">
             <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Reports &amp; Analytics</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('reports.title')}</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Live data from {state.projects.length} projects · {state.reviews.length} reviews
               </p>
@@ -382,20 +384,20 @@ export default function Reports() {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition bg-white dark:bg-gray-800"
             >
               <Download className="w-4 h-4" />
-              Export CSV
+              {t('reports.exportCsv')}
             </button>
             <button
               onClick={() => window.print()}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition bg-white dark:bg-gray-800"
             >
               <Printer className="w-4 h-4" />
-              Print Summary
+              {t('reports.printReport')}
             </button>
             <NavLink
-              to="/"
+              to="/dashboard"
               className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
             >
-              ← Dashboard
+              ← {t('nav.dashboard')}
             </NavLink>
           </div>
         </div>
