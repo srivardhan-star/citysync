@@ -1,5 +1,5 @@
 // ============================================================
-// CivicTrack — Data Store (LocalStorage-backed)
+// CitySync — Data Store (LocalStorage-backed)
 // ============================================================
 
 import type { AppState, Project, Review, AppNotification, Conflict, UserRole, IssueReport, IssueReportStatus } from '../types';
@@ -7,8 +7,8 @@ import { SEED_PROJECTS, SEED_REVIEWS, SEED_NOTIFICATIONS, SEED_ISSUE_REPORTS } f
 import { detectConflicts } from '../utils/conflictDetection';
 import { generateId } from '../utils';
 
-const STORAGE_KEY = 'civictrack_v3';
-const DATA_VERSION = 3;
+const STORAGE_KEY = 'citysync_v4';
+const DATA_VERSION = 4;
 
 function createInitialState(): AppState {
   const conflicts = detectConflicts(SEED_PROJECTS);

@@ -1,202 +1,245 @@
-# 🏛️ CivicTrack — Infrastructure Project Transparency & Coordination Platform
+# 🏙️ CitySync — Chennai Infrastructure Transparency Portal
 
-> **Hackathon MVP Deliverable** — A full-stack civic technology web application built to eliminate uncoordinated road excavations, provide complete public visibility into city works, deterministically detect and resolve municipal scheduling conflicts, and bridge government administration with citizen accountability.
+> **Hackathon MVP Deliverable** — A full-stack CivicTech web application for Chennai, built to eliminate uncoordinated road excavations, provide complete public visibility into city infrastructure works, detect and resolve scheduling conflicts, and bridge government administration with citizen accountability.
+
+> ⚠️ **Demo Mode** — All project records, civic issues, contractor names, contact details, and map coordinates in this application are **simulated for demonstration purposes only**. These are not verified live reports from the Greater Chennai Corporation (GCC), CMDA, TANGEDCO, or any official government body.
 
 ---
 
-## 🌟 Overview & Problem Statement
+## 🌟 Product Name
 
-Urban areas frequently suffer from poorly coordinated municipal works:
-* Roads excavated by the Water Department are resurfaced, only to be dug up weeks later by the Electrical Board.
-* Residents face unannounced lane closures with no posted timelines, delay explanations, or detour guidance.
+| Before | After |
+|--------|-------|
+| CivicTrack | **CitySync** |
+| Generic city | **Chennai, Tamil Nadu** |
+| Generic locations | **Anna Nagar, T. Nagar, Adyar, Velachery, Guindy, Tambaram, Mylapore, Perungudi, Pallavaram, Nungambakkam, Egmore** |
+
+---
+
+## 🌟 Problem Statement
+
+Urban areas like Chennai frequently suffer from poorly coordinated municipal works:
+* Roads excavated by the Water Department are resurfaced, only to be dug up weeks later by TANGEDCO.
+* Residents face unannounced lane closures near Velachery, Adyar, and Tambaram with no posted timelines, delay explanations, or detour guidance.
 * Departments operate in silos with no shared spatial or temporal scheduling awareness.
 * Citizens lack structured accountability channels to evaluate whether completed projects met delivery commitments or to report on-ground hazards.
 
-**CivicTrack** directly resolves this through a unified municipal project register, real-time spatial conflict detection, transparent weighted priority scoring, a resident-facing accountability portal, and **two synchronized operational perspectives: Government and Public**.
+**CitySync** directly resolves this through a unified municipal project register, real-time spatial conflict detection, transparent weighted priority scoring, a resident-facing accountability portal, and **two synchronized operational perspectives: Government and Public**.
 
 ---
 
-## 🏛️ Dual Perspectives: Government vs. Public Experience
+## 🏛️ Dual Perspectives: Government vs. Public
 
-CivicTrack incorporates a prominent, compact **Perspective Switcher** in the top navigation bar. Both perspectives operate on a **single, unified data store** in real-time — eliminating fragmented data silos while maintaining strict role-based operational boundaries.
+CitySync features a prominent **Perspective Switcher** in the top navigation bar. Both perspectives share one data store.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             CivicTrack Navigation                           │
-│  [🏛️ CivicTrack]     [ 🏛️ Government | 👥 Public ]     [🔔 3] [Reset Demo]  │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │
-            ┌──────────────────────────┴──────────────────────────┐
-            ▼                                                     ▼
-┌───────────────────────────────┐             ┌───────────────────────────────┐
-│     🏛️ GOVERNMENT MODE        │             │        👥 PUBLIC MODE         │
-├───────────────────────────────┤             ├───────────────────────────────┤
-│ • Full Project CRUD & Edits   │             │ • Explore & Filter Projects   │
-│ • Interactive Milestones      │             │ • Read-Only Schedules & Dets  │
-│ • Record Official Delays      │             │ • View Detours & Explanations │
-│ • Apply Conflict Resolutions  │             │ • Rate Completed Works (1-5★) │
-│ • Review Citizen Issues       │             │ • Report On-Ground Issues     │
-│ • Update Status & Response    │             │ • Track Resolution Status     │
-│ • Admin Analytics & CSV Export│             │ • Guarded Against Modifying   │
-└───────────────────────────────┘             └───────────────────────────────┘
-            │                                                     │
-            └──────────────────────────┬──────────────────────────┘
-                                       ▼
-             [ Shared LocalStorage State (`civictrack_v3`) ]
-```
+### 🏛️ Government Perspective
+- Full project CRUD (create, edit, delete)
+- Interactive milestone completion tracking
+- Formal delay recording with audit trail
+- Conflict resolution execution
+- Citizen issue management (review, respond, resolve)
+- Admin analytics and CSV export
 
-### 1. 🏛️ Government Perspective
-Designed for municipal engineers, city coordinators, and department heads:
-* **Project Administration**: Full ability to create, update, and manage public works projects (budget, contractors, segment IDs, locations, and priority parameters).
-* **Milestone Progression**: Interactive milestone completion checkboxes that automatically compute and update project completion percentage and record audit entries.
-* **Delay Justification Engine**: Form to officially submit delay records with mandatory justifications, revised end dates, and public explanations.
-* **Conflict Resolution Execution**: One-click execution to apply recommended sequencing plans (e.g., delaying Project B after Project A) directly to the city schedule.
-* **Citizen Issue Management Center**: Review citizen-reported grievances, filter by status (*Open*, *Under Review*, *Resolved*), update triage status, and publish official municipal responses.
-* **Administrative Analytics**: Department workload distribution, timeline variances, and CSV report export.
+### 👥 Public Perspective
+- Browse and search Chennai infrastructure projects
+- View project details, delay explanations, alternative routes
+- Rate completed works (1–5 stars)
+- **Report civic issues** on active projects
+- Track resolution status of submitted reports
 
-### 2. 👥 Public Perspective
-Designed for city residents, commuters, and civic watchdogs:
-* **Plain-Language Project Discovery**: Search and filter active and upcoming projects across neighborhoods, departments, and categories.
-* **Transparency & Disruption Notice**: Understand *why* a road is being dug up, which contractor is responsible, start/end dates, and alternative detour recommendations.
-* **Published Delay Explanations**: Read official municipal delay justifications with transparency into revised target dates.
-* **Completed Works Accountability**: Rate completed infrastructure projects (1–5 stars) and submit qualitative reviews on workmanship and timeliness.
-* **Citizen Issue Reporting**: File localized concerns directly against specific projects (e.g., *Safety Hazard*, *Detour Signage Missing*, *Excessive Dust/Noise*, *Unauthorized Digging*, *Drainage Blockage*).
-* **Live Issue Status Tracking**: Follow the real-time status of reported issues (*Open*, *Under Review*, *Resolved*) and read official department response notes.
-* **Strict Role Safeguards**: Public users are strictly prevented from creating projects, altering milestone checkboxes, changing schedules, approving delays, or executing conflict resolutions.
+> **Security Note**: Role restrictions are client-side simulation for this hackathon MVP. In production, all permissions must be enforced server-side with proper authentication.
 
 ---
 
-## 🚀 Core Algorithmic Engines
+## 🗺️ Chennai Infrastructure Map (New)
 
-### 1. ⚠️ Deterministic Scheduling Conflict Detection Engine
-* **Spatial & Temporal Overlap Logic**: Flags concurrent works on identical infrastructure segments (`segmentId`), factoring in configurable post-construction buffer days (e.g., preventing asphalt resurfacing right before pipeline laying).
-* **Incompatible Work Type Detection**: Detects hazardous simultaneous operations (e.g., simultaneous trenching and road resurfacing).
-* **Ranked Resolution Alternatives**: Deterministically computes sequencing solutions (Finish A first vs. Finish B first vs. Joint coordinated window), showing added delay days and trade-offs.
-* **One-Click Application**: Government coordinators can apply solutions with immediate automated schedule adjustments and notification broadcasts.
+- Interactive Leaflet map **centered on Chennai, Tamil Nadu**
+- **12 project markers** across Chennai neighborhoods with colour-coded status indicators
+- **OpenStreetMap tiles** with full attribution (no paid API key required)
+- **Distinguishable markers** by project category (road repair 🚧, drainage 💧, pipeline 🔵, electrical ⚡, other 🏗️)
+- **Status-coded colours**: Planned (blue), Ongoing (amber), Delayed (red), Completed (green), Emergency (rose)
+- **Popups** with title, location, department, deadline, progress bar, alt route, and link to project detail
+- **Filters** by status, category, and department
+- **List-view toggle** to click projects and fly the map to their marker
+- Responsive layout with proper Leaflet CSS, tile attribution, and empty state
 
-### 2. ⚖️ Explainable Weighted Priority Scoring
-* **Transparent Multi-Factor Model (0–100 score)**:
-  $$\text{Priority Score} = \frac{30 \times \text{Safety} + 25 \times \text{EssentialService} + 20 \times \text{Dependency} + 15 \times \text{Urgency} + 10 \times \text{Disruption}}{5}$$
-* **Critical Safety Override**: Automatically elevates life-safety emergencies (e.g., burst water mains, collapsed culverts) to #1 priority, bypassing standard weights.
-* **Explainable Municipal Rankings**: Transparent breakdown table showing all five rated factors (0–5 scale) for each project.
+---
 
-### 3. ⏱️ Delay Calculation Engine
-* **Standardized Variance Rules**:
-  * Projects before their planned deadline are never falsely marked delayed.
-  * Overdue ongoing projects compute delay days relative to `plannedEndDate`.
-  * Completed projects compute delay strictly as `actualEndDate - plannedEndDate`.
-  * Revised deadlines and reason logs are maintained in an immutable audit trail.
+## 🚀 Key Features
+
+### 1. 📊 Executive Infrastructure Dashboard
+- Dynamic city KPIs (total / ongoing / delayed / completed / emergency / conflicting) from shared dataset
+- Department workload bar chart and status pie chart (Recharts)
+- Attention alert center for emergencies and overdue works
+- Upcoming milestone feed
+
+### 2. 🗺️ Chennai Infrastructure Map
+- Interactive Leaflet map (see above)
+
+### 3. 🏗️ Public Works Project Management
+- Full project lifecycle tracking (planned dates, revised dates, actual completion, contractors, costs)
+- Advanced search & filtering (neighborhood, contractor, department, status, category, priority)
+- Interactive project creation form with 5-factor priority scoring sliders (Government only)
+- Granular milestone tracking and immutable audit trail
+
+### 4. ⚠️ Deterministic Scheduling Conflict Detection Engine
+- Spatial & temporal overlap on identical infrastructure segments (`segmentId`) with buffer days
+- Incompatible work type detection (e.g., simultaneous trenching + road resurfacing)
+- Ranked resolution alternatives (Finish A first / Finish B first / Joint window)
+- One-click schedule application with automated audit logging (Government only; Public sees advisory view)
+
+### 5. ⚖️ Explainable Weighted Priority Scoring
+$$\text{Priority Score} = \frac{30 \times \text{Safety} + 25 \times \text{EssentialService} + 20 \times \text{Dependency} + 15 \times \text{Urgency} + 10 \times \text{Disruption}}{5}$$
+- Critical Safety Override: life-safety emergencies jump to #1 regardless of score
+- Transparent factor breakdown table per project
+
+### 6. 👥 Public Transparency & Citizen Accountability
+- Citizen project browser with plain-language status legend
+- Verified ratings and reviews for completed works
+- **Citizen Issue Reporting**: Submit safety hazards, signage problems, and site inactivity reports
+- Live resolution status tracking (*Open*, *Under Review*, *Resolved*) with official response notes
+
+### 7. 📈 Reports, Analytics & Data Export
+- Completion rates, delay trends, citizen satisfaction
+- Planned vs. Actual timeline comparison charts
+- CSV export and print-friendly format
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Framework**: React 18 with TypeScript
-* **Build Tool**: Vite
-* **Styling**: Tailwind CSS (CivicTech dark navy/slate palette with clean card surfaces)
-* **Icons**: Lucide React
-* **Charts**: Recharts (Pie charts, Bar charts, Responsive containers)
-* **Date Utilities**: Date-fns
-* **Persistence**: LocalStorage with automatic seed data initialization and state reset functionality (`civictrack_v3`)
-* **Testing**: Node / TSX automated test runner for algorithmic logic and role-based safeguards
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18 + TypeScript |
+| Build Tool | Vite |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Charts | Recharts |
+| Map | Leaflet + React-Leaflet v4 + OpenStreetMap |
+| Date Utilities | Date-fns |
+| Persistence | LocalStorage (`citysync_v4`) with auto seed |
+| Testing | TSX node runner (17 deterministic tests) |
 
 ---
 
-## ⚡ Quick Start & Run Commands
+## ⚡ Quick Start
 
-### 1. Prerequisites
-Ensure [Node.js](https://nodejs.org/) (v18 or higher) and `npm` are installed.
+### Prerequisites
+- Node.js v18 or higher
+- npm
 
-### 2. Installation
-Navigate to the project root and install dependencies:
+### Install & Run
+
 ```bash
 npm install
-```
-
-### 3. Start Development Server
-Run the local Vite dev server:
-```bash
 npm run dev
 ```
+
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 4. Run Automated Algorithmic & Role Tests
-Execute the comprehensive test suite verifying priority scoring, date overlap logic, delay calculation, conflict resolution generation, and dual-perspective role safeguards:
+### Run Tests
+
 ```bash
 npm test
 ```
-*Current test status: **17 passed, 0 failed**.*
 
-### 5. Build for Production
-Generate the production-ready distribution bundle:
+*17 tests, 0 failures:* priority scoring, date overlap, delay calculation, milestone progress, conflict detection, role safeguards.
+
+### Production Build
+
 ```bash
 npm run build
 ```
-*Zero TypeScript and Vite errors (`dist/index.html`, `dist/assets/index.js`, `dist/assets/index.css`).*
+
+Zero TypeScript errors. Output in `dist/`.
+
+### Deploy to Vercel
+
+1. Push to GitHub: `git push origin main`
+2. Import repo at [vercel.com/new](https://vercel.com/new) — auto-detects Vite
+3. **Build Command**: `npm run build` | **Output Dir**: `dist`
+4. Deploy. The `vercel.json` SPA rewrites are already configured.
 
 ---
 
-## 🧪 Automated Test Suite (17 Tests)
+## 🗺️ Chennai Demo Data
 
-The automated test suite (`src/test-suite.ts`) verifies all mission-critical algorithmic components and role boundaries:
+12 simulated projects across Chennai:
 
-1. **Priority Score Algorithm**:
-   - `✓` Max ratings (all 5) yield score 100
-   - `✓` Min ratings (all 0) yield score 0
-   - `✓` Weighted formula (4,3,2,4,4) yields exactly 67
-2. **Date Overlap Engine**:
-   - `✓` Separated dates do not overlap
-   - `✓` Direct date overlap correctly detected
-   - `✓` Buffer days correctly trigger overlap warning
-3. **Delay Calculation Engine**:
-   - `✓` Early completed project is not marked delayed
-   - `✓` Completed project with actual > planned has exact delay days
-   - `✓` Unfinished project before deadline is not delayed
-4. **Milestone Progress Engine**:
-   - `✓` 2/4 milestones yields exactly 50%
-5. **Conflict Detection & Recommendation Engine**:
-   - `✓` Deterministic conflict engine detects conflicts in seed data
-   - `✓` Generates ranked resolution alternatives
-   - `✓` At least one viable scheduling adjustment alternative proposed
-6. **Dual Perspective & Citizen Issue Reporting**:
-   - `✓` Initial state defaults to Government perspective
-   - `✓` `setUserRole` successfully switches to Public perspective
-   - `✓` Citizens can successfully submit issue reports with project linkage
-   - `✓` Government perspective can review, resolve, and publish official responses to citizen issue reports
+| # | Project | Neighborhood | Status | Category |
+|---|---------|-------------|--------|----------|
+| PRJ-001 | Anna Nagar 2nd Avenue Resurfacing | Anna Nagar | ✅ Completed | Road Repair |
+| PRJ-002 | T. Nagar Panagal Park Drainage Upgrade | T. Nagar | ✅ Completed (late) | Drainage |
+| PRJ-003 | Adyar Water Main Replacement | Adyar | 🔄 Ongoing | Water Pipeline |
+| PRJ-004 | Velachery Main Road Pothole Repair | Velachery | ⏰ Delayed | Road Repair |
+| PRJ-005 | EMERGENCY: Guindy Water Main Burst | Guindy | 🚨 Emergency | Water Pipeline |
+| PRJ-006 | Tambaram Sanatorium Road Reconstruction | Tambaram | 📋 Planned | Road Repair |
+| PRJ-007 | Tambaram Sanatorium Road Cable Laying | Tambaram | 📋 Planned (conflicts PRJ-006) | Electrical |
+| PRJ-008 | Mylapore Mada Streets Footpath Work | Mylapore | 🔄 Ongoing (revised deadline) | Other |
+| PRJ-009 | Perungudi Sewer Line Extension | Perungudi | ✅ Completed | Drainage |
+| PRJ-010 | Nungambakkam Substation Upgrade | Nungambakkam | 📋 Planned | Electrical |
+| PRJ-011 | Egmore Museum Road Beautification | Egmore | 📋 Planned | Other |
+| PRJ-012 | Pallavaram Junction Signal Upgrade | Pallavaram | 🔄 Ongoing | Electrical |
+
+PRJ-006 and PRJ-007 share the same `segmentId` (`SEG-TB-001`) with overlapping dates, **demonstrating conflict detection**.
 
 ---
 
-## 🎬 3-Minute Hackathon Demonstration Script
+## 🧪 Automated Test Results (17/17 passing)
 
-Follow this path to showcase CivicTrack during judging:
+```
+1. Priority Score Algorithm:
+  ✓ Max ratings (all 5) yield score 100
+  ✓ Min ratings (all 0) yield score 0
+  ✓ Weighted formula (4,3,2,4,4) yields exactly 67
 
-1. **Top Bar Perspective Switcher**:
-   - Point out the **[🏛️ Government | 👥 Public]** toggle in the top bar and role badge in the sidebar.
-2. **Executive Dashboard (`/`)**:
-   - View citywide statistics calculated in real-time from the shared dataset.
-   - Show active emergency alerts and department workload distributions.
-3. **Conflict Detection & Coordination (`/conflicts`)**:
-   - Switch to **Government Mode**: Show the detected conflict between Water Works and Road Resurfacing on Segment `SEG-401`.
-   - Explain the 5-factor Priority Score ranking and the Critical Safety Override.
-   - Click **"Apply Resolution"** to resolve the conflict by shifting the road resurfacing schedule with buffer days.
-   - Show how the conflict resolves immediately and updates the project timeline.
-4. **Switch to Public Perspective (`👥 Public`)**:
-   - Click **Public** in the top bar. Note the instant interface adaptation:
-     * Nav labels switch to resident terminology (*Explore Projects*, *Coordination Viewer*).
-     * Administrative action buttons ("Add Project", "Record Delay", "Apply Schedule") are hidden.
-     * Milestone checkboxes become disabled with explanatory tooltips.
-5. **Citizen Issue Reporting (`/feedback` & `/projects/:id`)**:
-   - Navigate to any project or the **Citizen Issue Reports** tab.
-   - Click **"Report an Issue"** to file a real-world grievance (e.g. "Trench left uncovered near school").
-   - Switch back to **Government Mode**: The reported issue immediately appears in the government triage queue.
-   - Click **"Mark Under Review"** or **"Resolve"**, enter an official response (*"Barricade installed and trench covered"*), and see the status update propagate to Public mode instantly.
-6. **Reports & Data Export (`/reports`)**:
-   - Showcase Planned vs. Actual completion comparisons and export the municipal project dataset as CSV.
+2. Date Overlap Engine:
+  ✓ Separated dates do not overlap
+  ✓ Direct date overlap correctly detected
+  ✓ Buffer days correctly trigger overlap warning
+
+3. Delay Calculation Engine:
+  ✓ Early completed project is not marked delayed
+  ✓ Completed project with actual > planned has exact delay days
+  ✓ Unfinished project before deadline is not delayed
+
+4. Milestone Progress Engine:
+  ✓ 2/4 milestones yields exactly 50%
+
+5. Conflict Detection & Recommendation Engine:
+  ✓ Deterministic conflict engine detects conflicts in seed data
+  ✓ Generates ranked resolution alternatives
+  ✓ At least one viable scheduling adjustment alternative proposed
+
+6. Dual Perspective & Citizen Issue Reporting:
+  ✓ Initial state defaults to Government perspective
+  ✓ setUserRole successfully switches to Public perspective
+  ✓ Citizens can successfully submit issue reports
+  ✓ Government can review, resolve, and respond to citizen issues
+```
 
 ---
 
-## ⚖️ Demo Disclaimers & Assumptions
+## 🎬 3-Minute Demo Script
 
-* **Simulated Demo Environment**: All contractor names, phone numbers, email addresses, and project titles are fictitious.
-* **Prototype Heuristic**: Priority scoring weights (Safety 30%, Essential 25%, Dependency 20%, Urgency 15%, Disruption 10%) are prototype heuristics designed for hackathon demonstration.
-* **Role Simulation**: For the 24-hour hackathon MVP, the perspective switch in the UI simulates role authentication using LocalStorage persistence.
+1. **Brand & Map** — Show the CitySync logo and navigate to **Chennai Infrastructure Map**. Demonstrate filter controls and click a project to fly to its marker.
+2. **Dashboard** — Return to the dashboard and show live KPIs from the shared dataset.
+3. **Conflict Detection** — Show the detected conflict between Tambaram Sanatorium Road projects. Switch to Government mode. Click **Apply Resolution**.
+4. **Public Perspective** — Switch to Public. Note hidden admin buttons, read-only milestones, and advisory conflict view.
+5. **Citizen Reporting** — In Public mode, report a safety issue on any active project. Switch to Government — it appears immediately in the triage queue. Resolve it with an official response.
+6. **Reports** — Show the Planned vs. Actual chart and export as CSV.
+
+---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the four-person Git workflow, branch strategy, and shared file coordination rules.
+
+---
+
+## ⚖️ Disclaimers
+
+- **Simulated Demo Environment**: All contractors, contacts, project names, and coordinates are entirely fictional.
+- **Prototype Algorithm**: Priority scoring weights are prototype heuristics, not statutory standards.
+- **Demo Authentication**: The Government/Public toggle simulates role switching using LocalStorage. Not production-secure.
+- **Not Official Data**: CitySync is not affiliated with the Greater Chennai Corporation, CMDA, TANGEDCO, or Tamil Nadu government.
