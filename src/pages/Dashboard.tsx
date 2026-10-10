@@ -46,18 +46,18 @@ function StatCard({
   }
   return (
     <div
-      className={clsx('card p-4 flex items-start gap-4', to && 'cursor-pointer hover:shadow-md transition-shadow')}
+      className={clsx('card p-4 flex items-start gap-4', to && 'cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99]')}
       onClick={handleClick}
     >
       <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0', color)}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-        {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
+        <div className="text-2xl font-bold" style={{ color: 'var(--cs-text)' }}>{value}</div>
+        <div className="text-sm font-medium" style={{ color: 'var(--cs-text)' }}>{label}</div>
+        {sub && <div className="text-xs mt-0.5" style={{ color: 'var(--cs-muted)' }}>{sub}</div>}
       </div>
-      {to && <ChevronRight className="w-4 h-4 text-gray-400 ml-auto mt-1" />}
+      {to && <ChevronRight className="w-4 h-4 ml-auto mt-1" style={{ color: 'var(--cs-muted)' }} />}
     </div>
   )
 }

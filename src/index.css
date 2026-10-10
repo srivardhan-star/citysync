@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Custom Properties ─────────────────────────────────── */
+:root {
+  --cs-bg:          #f0f4f8;
+  --cs-surface:     #ffffff;
+  --cs-elevated:    #f8fafc;
+  --cs-border:      #e2e8f0;
+  --cs-text:        #111827;
+  --cs-muted:       #6b7280;
+  --cs-accent:      #0ea5e9;
+  --cs-accent-dark: #0284c7;
+  --cs-sidebar-bg:  linear-gradient(to bottom, #1e3a5f, #152c4a);
+}
+
+.dark {
+  --cs-bg:          #111827;
+  --cs-surface:     #1f2937;
+  --cs-elevated:    #27364a;
+  --cs-border:      #374151;
+  --cs-text:        #f9fafb;
+  --cs-muted:       #9ca3af;
+  --cs-accent:      #38bdf8;
+  --cs-accent-dark: #0ea5e9;
+  --cs-sidebar-bg:  linear-gradient(to bottom, #0f172a, #0a1628);
+}
+
+/* ── Global transitions (theme switch) ─────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
@@ -9,7 +50,9 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply antialiased;
+    background-color: var(--cs-bg);
+    color: var(--cs-text);
   }
 
   * {
@@ -18,8 +61,10 @@
 }
 
 @layer components {
+  /* ── Sidebar nav ── */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium;
+    transition: background-color 150ms ease, color 150ms ease, transform 100ms ease;
   }
 
   .sidebar-link:hover {
@@ -34,48 +79,125 @@
     @apply text-blue-100;
   }
 
+  /* ── Cards ── */
   .card {
-    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+    @apply rounded-xl border shadow-sm;
+    background-color: var(--cs-surface);
+    border-color: var(--cs-border);
+    transition: background-color 200ms ease, border-color 200ms ease,
+                box-shadow 150ms ease, transform 150ms ease;
   }
 
+  .card-hover {
+    @apply card;
+  }
+  .card-hover:hover {
+    @apply shadow-md;
+    transform: translateY(-1px);
+  }
+
+  /* ── Badges ── */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
+  /* ── Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium
+           hover:bg-blue-800 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+           border transition-all hover:scale-[1.01] active:scale-95;
+    background-color: var(--cs-surface);
+    border-color: var(--cs-border);
+    color: var(--cs-text);
+  }
+  .btn-secondary:hover {
+    background-color: var(--cs-elevated);
   }
 
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors;
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium
+           hover:bg-red-700 active:scale-95 transition-all;
   }
 
+  /* ── Form inputs ── */
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all;
+    @apply w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
+           focus:border-transparent transition-all;
+    background-color: var(--cs-surface);
+    border: 1px solid var(--cs-border);
+    color: var(--cs-text);
+  }
+  .input::placeholder {
+    color: var(--cs-muted);
   }
 
   .select {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all;
+    @apply w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
+           focus:border-transparent transition-all;
+    background-color: var(--cs-surface);
+    border: 1px solid var(--cs-border);
+    color: var(--cs-text);
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium mb-1;
+    color: var(--cs-muted);
+  }
+  .dark .label {
+    color: #d1d5db;
   }
 
+  /* ── Stat card ── */
   .stat-card {
     @apply card p-4 flex items-start gap-4;
   }
 
+  /* ── Progress bar ── */
   .progress-bar {
-    @apply h-2 rounded-full bg-gray-200 overflow-hidden;
+    @apply h-2 rounded-full overflow-hidden;
+    background-color: var(--cs-border);
   }
 
   .progress-fill {
     @apply h-full rounded-full transition-all duration-500;
+  }
+
+  /* ── Modal backdrop ── */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  .modal-panel {
+    @apply rounded-2xl shadow-2xl w-full max-w-md p-6;
+    background-color: var(--cs-surface);
+    border: 1px solid var(--cs-border);
+    animation: scaleIn 0.18s ease-out;
+  }
+
+  /* ── Section card ── */
+  .section-card {
+    @apply rounded-xl border shadow-sm;
+    background-color: var(--cs-surface);
+    border-color: var(--cs-border);
+  }
+  .section-card-header {
+    @apply flex items-center gap-2 px-5 py-3.5 border-b;
+    border-color: var(--cs-border);
+  }
+  .section-card-body {
+    @apply p-5;
+  }
+
+  /* ── Page transition wrapper ── */
+  .page-enter {
+    animation: fadeSlideIn 0.2s ease-out both;
   }
 }
 
@@ -87,6 +209,10 @@
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .dark .scrollbar-thin {
+    scrollbar-color: #374151 transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -101,4 +227,66 @@
     background: #cbd5e1;
     border-radius: 2px;
   }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
 }
+
+/* ── Keyframe animations ────────────────────────────────────── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes notifEntrance {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Recharts dark mode overrides ─────────────────────────── */
+.dark .recharts-text {
+  fill: #9ca3af !important;
+}
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: #374151 !important;
+}
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+/* ── Leaflet dark mode overrides ──────────────────────────── */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+.dark .leaflet-control-zoom a,
+.dark .leaflet-bar a {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151;
+}
+
