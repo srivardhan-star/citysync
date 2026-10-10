@@ -154,6 +154,31 @@ export interface Conflict {
   justification?: string;
   citizenExplanation?: string;
   changesApplied?: ConflictChangeRecord[];
+  priorityScore?: number;
+  priorityLevel?: CoordinationPriorityLevel;
+  priorityAssessment?: ConflictPriorityAssessment;
+}
+
+export type CoordinationPriorityLevel = 'High' | 'Medium' | 'Low';
+
+export interface PriorityFactor {
+  id: string;
+  label: string;
+  score: number;
+  maxScore: number;
+  description: string;
+}
+
+export interface ConflictPriorityAssessment {
+  conflictId: string;
+  score: number; // 0–100
+  level: CoordinationPriorityLevel;
+  factors: PriorityFactor[];
+  explanation: string;
+  disclaimer: string;
+  overlapDays: number;
+  leadTimeDays?: number;
+  hasDigOnceRisk: boolean;
 }
 
 export interface ConflictResolutionOption {
@@ -201,8 +226,10 @@ export interface IssueReport {
   locationDetails?: string;
   status: IssueReportStatus;
   submittedAt: string;
+  updatedAt?: string;
   reporterName?: string;
   officialResponse?: string;
+  referenceNumber?: string;
 }
 
 export interface LedgerProjectRecord {

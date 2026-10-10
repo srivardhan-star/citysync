@@ -44,6 +44,7 @@ import {
   STATUS_COLORS,
   CATEGORY_LABELS,
   PRIORITY_COLORS,
+  calculateConflictPriority,
 } from '../utils';
 import type { Conflict, ConflictResolutionOption, Project, ResolutionCategory } from '../types';
 
@@ -128,6 +129,13 @@ function WhatIfSimulatorPanel({
       },
     ]);
   }, [projects, conflict.id, selectedProjectId, proposedStart, proposedEnd]);
+
+  // Live simulated priority assessment
+  const simPriority = useMemo(() => {
+    if (simResult.isTargetConflictResolved) return null;
+    const activeConf = simResult.simulatedConflicts.find((c) => c.id === conflict.id) || conflict;
+    return calculateConflictPriority(activeConf, simResult.simulatedProjects);
+  }, [simResult, conflict]);
 
   const handlePresetClick = (offset: number) => {
     setDayOffset(offset);
@@ -453,6 +461,16 @@ function WhatIfSimulatorPanel({
             Added Schedule Delay: <strong>+{simResult.delayDays} days</strong>
           </span>
           <span>
+            Simulated Urgency:{' '}
+            <strong className={simResult.isTargetConflictResolved ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>
+              {simResult.isTargetConflictResolved
+                ? 'Resolved (0/100)'
+                : simPriority
+                ? `${simPriority.level} (${simPriority.score}/100)`
+                : 'Active Overlap'}
+            </strong>
+          </span>
+          <span>
             City-Wide Conflicts Remaining: <strong>{simResult.remainingConflictsCount}</strong>
           </span>
         </div>
@@ -568,21 +586,58 @@ export default function ConflictDetection() {
   } | null>(null);
 
   const [filterMode, setFilterMode] = useState<'all' | 'active' | 'resolved'>('all');
+  const [sortBy, setSortBy] = useState<'priority' | 'date' | 'segment'>('priority');
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  // Priority assessments for all conflicts
+  const conflictsWithPriority = useMemo(() => {
+    return conflicts.map((c) => {
+      const assessment = calculateConflictPriority(c, projects);
+      return {
+        ...c,
+        priorityScore: assessment.score,
+        priorityLevel: assessment.level,
+        priorityAssessment: assessment,
+      };
+    });
+  }, [conflicts, projects]);
 
   // Counts
   const stats = useMemo(() => {
     const total = conflicts.length;
     const active = conflicts.filter((c) => !c.resolved).length;
     const resolved = conflicts.filter((c) => c.resolved).length;
-    return { total, active, resolved };
-  }, [conflicts]);
+    const highPriorityActive = conflictsWithPriority.filter(
+      (c) => !c.resolved && c.priorityLevel === 'High'
+    ).length;
+    return { total, active, resolved, highPriorityActive };
+  }, [conflicts, conflictsWithPriority]);
 
   const displayedConflicts = useMemo(() => {
-    if (filterMode === 'active') return conflicts.filter((c) => !c.resolved);
-    if (filterMode === 'resolved') return conflicts.filter((c) => c.resolved);
-    return conflicts;
-  }, [conflicts, filterMode]);
+    let list = [...conflictsWithPriority];
+    if (filterMode === 'active') list = list.filter((c) => !c.resolved);
+    if (filterMode === 'resolved') list = list.filter((c) => c.resolved);
+
+    return list.sort((a, b) => {
+      if (sortBy === 'priority') {
+        // Active conflicts rank ahead of resolved conflicts
+        if (!a.resolved && b.resolved) return -1;
+        if (a.resolved && !b.resolved) return 1;
+        const scoreDiff = (b.priorityScore ?? 0) - (a.priorityScore ?? 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        const overlapDiff = (b.priorityAssessment?.overlapDays ?? 0) - (a.priorityAssessment?.overlapDays ?? 0);
+        if (overlapDiff !== 0) return overlapDiff;
+        return a.id.localeCompare(b.id);
+      }
+      if (sortBy === 'date') {
+        return new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime();
+      }
+      if (sortBy === 'segment') {
+        return (a.segmentId || '').localeCompare(b.segmentId || '');
+      }
+      return 0;
+    });
+  }, [conflictsWithPriority, filterMode, sortBy]);
 
   // Priority ranking list
   const rankedProjects = useMemo(() => {
@@ -674,7 +729,18 @@ export default function ConflictDetection() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-5 border-l-4 border-l-rose-500 flex items-center justify-between">
+          <div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Urgent Conflicts</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.highPriorityActive}</div>
+            <div className="text-xs text-rose-600 dark:text-rose-400 mt-0.5 font-medium">High priority score (≥70)</div>
+          </div>
+          <div className="w-12 h-12 bg-rose-100 dark:bg-rose-950/60 rounded-xl flex items-center justify-center text-rose-600 dark:text-rose-400">
+            <Zap className="w-6 h-6" />
+          </div>
+        </div>
+
         <div className="card p-5 border-l-4 border-l-orange-500 flex items-center justify-between">
           <div>
             <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Active Conflicts</div>
@@ -781,38 +847,58 @@ export default function ConflictDetection() {
             </p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-xl text-xs font-medium">
-            <button
-              onClick={() => setFilterMode('all')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                filterMode === 'all'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm font-semibold'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              All ({conflicts.length})
-            </button>
-            <button
-              onClick={() => setFilterMode('active')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                filterMode === 'active'
-                  ? 'bg-white dark:bg-gray-700 text-orange-700 dark:text-orange-400 shadow-sm font-semibold'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              Active ({stats.active})
-            </button>
-            <button
-              onClick={() => setFilterMode('resolved')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                filterMode === 'resolved'
-                  ? 'bg-white dark:bg-gray-700 text-purple-300 dark:text-purple-400 shadow-sm font-semibold'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              Resolved ({stats.resolved})
-            </button>
+{/* Controls: Priority Sort & Filter Pills */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Sort Control */}
+            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl text-xs">
+              <span className="text-gray-500 dark:text-gray-400 pl-2 pr-1 font-semibold flex items-center gap-1">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                Sort:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs font-semibold rounded-lg px-2.5 py-1 border-0 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="priority">Priority: Highest First</option>
+                <option value="date">Detection Date: Newest First</option>
+                <option value="segment">Segment ID (A-Z)</option>
+              </select>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-xl text-xs font-medium">
+              <button
+                onClick={() => setFilterMode('all')}
+                className={`px-3 py-1.5 rounded-lg transition ${
+                  filterMode === 'all'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm font-semibold'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                All ({conflicts.length})
+              </button>
+              <button
+                onClick={() => setFilterMode('active')}
+                className={`px-3 py-1.5 rounded-lg transition ${
+                  filterMode === 'active'
+                    ? 'bg-white dark:bg-gray-700 text-orange-700 dark:text-orange-400 shadow-sm font-semibold'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                Active ({stats.active})
+              </button>
+              <button
+                onClick={() => setFilterMode('resolved')}
+                className={`px-3 py-1.5 rounded-lg transition ${
+                  filterMode === 'resolved'
+                    ? 'bg-white dark:bg-gray-700 text-teal-700 dark:text-teal-400 shadow-sm font-semibold'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                Resolved ({stats.resolved})
+              </button>
+            </div>
           </div>
         </div>
 
@@ -888,13 +974,30 @@ export default function ConflictDetection() {
                       </div>
                     </div>
 
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Reason:{' '}
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">
-                        {conflict.reason === 'incompatible_work_types'
-                          ? 'Incompatible Simultaneous Works'
-                          : 'Temporal Schedule Overlap'}
-                      </span>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {conflict.priorityAssessment && (
+                        <span
+                          className={`badge font-bold px-2.5 py-1 text-xs flex items-center gap-1.5 shadow-sm ${
+                            conflict.priorityLevel === 'High'
+                              ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                              : conflict.priorityLevel === 'Medium'
+                              ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                              : 'bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
+                          }`}
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Priority: {conflict.priorityLevel} ({conflict.priorityScore}/100)</span>
+                        </span>
+                      )}
+
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Reason:{' '}
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                          {conflict.reason === 'incompatible_work_types'
+                            ? 'Incompatible Simultaneous Works'
+                            : 'Temporal Schedule Overlap'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -978,6 +1081,85 @@ export default function ConflictDetection() {
                         </div>
                       )}
                     </div>
+
+                    {/* Explainable Coordination Priority Assessment Card */}
+                    {conflict.priorityAssessment && (
+                      <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white dark:from-gray-800 dark:via-gray-800 dark:to-indigo-950/20 p-4.5 space-y-3.5 shadow-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="p-1.5 rounded-lg bg-blue-600 text-white shadow-sm flex items-center justify-center">
+                              <Zap className="w-4 h-4" />
+                            </span>
+                            <div>
+                              <h4 className="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider">
+                                Explainable Coordination Priority Assessment
+                              </h4>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                Objective evidence-based score ranking this conflict among active municipal works
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                              Urgency Level:
+                            </span>
+                            <span
+                              className={`font-mono font-bold text-xs px-2.5 py-1 rounded-lg shadow-sm ${
+                                conflict.priorityLevel === 'High'
+                                  ? 'bg-rose-600 text-white'
+                                  : conflict.priorityLevel === 'Medium'
+                                  ? 'bg-amber-500 text-white'
+                                  : 'bg-blue-600 text-white'
+                              }`}
+                            >
+                              {conflict.priorityScore} / 100 ({conflict.priorityLevel})
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Plain language explanation */}
+                        <div className="p-3 bg-white dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-200 leading-relaxed shadow-xs">
+                          <span className="font-semibold text-gray-900 dark:text-gray-100 block mb-0.5">
+                            Coordination Rationale:
+                          </span>
+                          {conflict.priorityAssessment.explanation}
+                        </div>
+
+                        {/* Contributing Factors breakdown */}
+                        <div className="space-y-1.5">
+                          <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                            <span>Contributing Factors Breakdown ({conflict.priorityAssessment.factors.length} active factors):</span>
+                            <span className="text-[10px] text-gray-400 font-normal">Formula max: 100 pts</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {conflict.priorityAssessment.factors.map((f) => (
+                              <div
+                                key={f.id}
+                                className="p-2.5 bg-white/90 dark:bg-gray-800/90 rounded-lg border border-gray-200 dark:border-gray-700 text-xs space-y-1 shadow-xs"
+                              >
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="font-semibold text-gray-800 dark:text-gray-200 text-[11px]">
+                                    {f.label}
+                                  </span>
+                                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 shrink-0">
+                                    +{f.score} pts
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                                  {f.description}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Demonstration Disclaimer */}
+                        <div className="text-[10px] text-amber-700 dark:text-amber-400 flex items-center gap-1.5 pt-1 border-t border-blue-100/60 dark:border-gray-700">
+                          <Info className="w-3.5 h-3.5 shrink-0" />
+                          <span>{conflict.priorityAssessment.disclaimer}</span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Conflict Explanation & Impact */}
                     <div className="bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-xl p-4 space-y-2 text-xs">

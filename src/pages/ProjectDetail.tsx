@@ -1322,8 +1322,13 @@ export default function ProjectDetail() {
                       >
                         <div className="flex items-start justify-between gap-2 flex-wrap">
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-gray-900 text-sm">{issue.title}</span>
+                              {issue.referenceNumber && (
+                                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-gray-100 text-teal-800 font-bold border border-gray-200">
+                                  Ref: {issue.referenceNumber}
+                                </span>
+                              )}
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusConfig.color}`}>
                                 {statusConfig.label}
                               </span>
@@ -1335,6 +1340,12 @@ export default function ProjectDetail() {
                               <span className="text-gray-500 font-medium">{categoryLabels[issue.category] || issue.category}</span>
                             </p>
                           </div>
+                          <NavLink
+                            to="/feedback"
+                            className="text-teal-600 hover:underline text-[11px] font-semibold"
+                          >
+                            Track in Portal →
+                          </NavLink>
                         </div>
 
                         <p className="text-gray-700 leading-relaxed bg-gray-50/70 p-2.5 rounded-lg border border-gray-100">
@@ -1364,8 +1375,11 @@ export default function ProjectDetail() {
                               {issue.status !== 'resolved' && (
                                 <button
                                   onClick={() => {
-                                    const resp = window.prompt('Enter official resolution note for the resident public record:');
-                                    updateIssueReportStatus(issue.id, 'resolved', resp || 'Issue inspected and mitigated by municipal works department.');
+                                    updateIssueReportStatus(
+                                      issue.id,
+                                      'resolved',
+                                      'Site inspected and corrective action verified by municipal civil engineering team.'
+                                    );
                                   }}
                                   className="px-2.5 py-1 text-[11px] rounded bg-green-50 text-green-700 hover:bg-green-100 font-medium border border-green-200 transition"
                                 >

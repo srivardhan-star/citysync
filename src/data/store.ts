@@ -5,7 +5,7 @@
 import type { AppState, Project, Review, AppNotification, Conflict, UserRole, IssueReport, IssueReportStatus, ResolutionCategory, ConflictChangeRecord, LedgerEntry, LedgerProjectRecord } from '../types';
 import { SEED_PROJECTS, SEED_REVIEWS, SEED_NOTIFICATIONS, SEED_ISSUE_REPORTS, SEED_LEDGER_ENTRIES } from './seedData';
 import { detectConflicts, syncConflicts } from '../utils/conflictDetection';
-import { generateId } from '../utils';
+import { generateId, generateComplaintReference } from '../utils';
 
 const STORAGE_KEY = 'citysync_v4';
 const DATA_VERSION = 4;
@@ -40,7 +40,21 @@ export function loadState(): AppState {
       saveState(initial);
       return initial;
     }
-    if (!parsed.issueReports) parsed.issueReports = SEED_ISSUE_REPORTS;
+    if (!parsed.issueReports) {
+      parsed.issueReports = SEED_ISSUE_REPORTS;
+    } else {
+      parsed.issueReports = parsed.issueReports.map((r, idx) => {
+        if (!r.referenceNumber) {
+          const suffix = (r.id.replace(/[^a-zA-Z0-9]/g, '') + String(idx)).slice(-6).toUpperCase().padStart(6, 'X');
+          return {
+            ...r,
+            referenceNumber: `CS-2026-${suffix}`,
+            updatedAt: r.updatedAt || r.submittedAt,
+          };
+        }
+        return r;
+      });
+    }
     if (!parsed.ledgerEntries) parsed.ledgerEntries = SEED_LEDGER_ENTRIES;
     if (!parsed.userRole) parsed.userRole = 'government';
     return parsed;
@@ -394,18 +408,31 @@ export function setUserRole(state: AppState, role: UserRole): AppState {
 
 export function addIssueReport(state: AppState, report: IssueReport): AppState {
   const project = state.projects.find((p) => p.id === report.projectId);
+  const existingRefs = (state.issueReports || [])
+    .map((r) => r.referenceNumber)
+    .filter(Boolean) as string[];
+  const referenceNumber = report.referenceNumber || generateComplaintReference(existingRefs);
+  const now = new Date().toISOString();
+
+  const finalReport: IssueReport = {
+    ...report,
+    referenceNumber,
+    submittedAt: report.submittedAt || now,
+    updatedAt: report.updatedAt || now,
+  };
+
   const notif: AppNotification = {
     id: generateId('notif'),
     type: 'general',
-    message: `Citizen issue reported: "${report.title}" on project "${project ? project.title : report.projectId}".`,
-    projectId: report.projectId,
+    message: `Citizen issue reported [${referenceNumber}]: "${finalReport.title}" on project "${project ? project.title : finalReport.projectId}".`,
+    projectId: finalReport.projectId,
     read: false,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   };
 
   const nextState: AppState = {
     ...state,
-    issueReports: [report, ...state.issueReports],
+    issueReports: [finalReport, ...state.issueReports],
     notifications: [notif, ...state.notifications],
   };
   saveState(nextState);
@@ -418,12 +445,14 @@ export function updateIssueReportStatus(
   status: IssueReportStatus,
   officialResponse?: string
 ): AppState {
+  const now = new Date().toISOString();
   const nextReports = state.issueReports.map((r) =>
     r.id === reportId
       ? {
           ...r,
           status,
           officialResponse: officialResponse !== undefined ? officialResponse : r.officialResponse,
+          updatedAt: now,
         }
       : r
   );
@@ -435,13 +464,14 @@ export function updateIssueReportStatus(
     resolved: 'Resolved',
   };
 
+  const refTag = target?.referenceNumber ? `[${target.referenceNumber}] ` : '';
   const notif: AppNotification = {
     id: generateId('notif'),
     type: 'general',
-    message: `Issue report "${target ? target.title : reportId}" updated to ${statusLabels[status]}.`,
+    message: `Issue report ${refTag}"${target ? target.title : reportId}" updated to ${statusLabels[status]}.`,
     projectId: target?.projectId,
     read: false,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   };
 
   const nextState: AppState = {
