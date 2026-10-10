@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FolderOpen, AlertTriangle, MessageSquare,
   BarChart3, Bell, RefreshCw, ChevronRight, Zap, X, CheckCheck,
-  Menu, Shield, Building2, Users, Eye
+  Menu, Shield, Building2, Users, Eye, Map
 } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
@@ -47,6 +47,11 @@ export default function Layout() {
       label: isGovernment ? 'Public Works Projects' : 'Explore Projects',
     },
     {
+      to: '/map',
+      icon: Map,
+      label: 'Chennai Infrastructure Map',
+    },
+    {
       to: '/conflicts',
       icon: AlertTriangle,
       label: isGovernment ? 'Conflict Detection' : 'Coordination Viewer',
@@ -89,8 +94,8 @@ export default function Layout() {
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="font-bold text-white text-lg leading-none">CivicTrack</div>
-            <div className="text-blue-300 text-xs mt-0.5">Infrastructure Platform</div>
+            <div className="font-bold text-white text-lg leading-none">CitySync</div>
+            <div className="text-blue-300 text-xs mt-0.5">Chennai Infrastructure Portal</div>
           </div>
           <button
             className="ml-auto lg:hidden text-blue-300 hover:text-white"

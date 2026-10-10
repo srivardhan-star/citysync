@@ -1,5 +1,5 @@
 // ============================================================
-// CivicTrack — Core TypeScript Types
+// CitySync — Core TypeScript Types
 // ============================================================
 
 export type ProjectCategory =
@@ -102,6 +102,8 @@ export interface Project {
   segmentId: string;        // Road/infrastructure segment ID for conflict detection
   location: string;
   neighborhood: string;
+  lat?: number;             // WGS-84 latitude (for map display)
+  lng?: number;             // WGS-84 longitude (for map display)
   startDate: string;
   plannedEndDate: string;   // Original — never overwritten silently
   revisedEndDate?: string;  // Set only when delay is formally recorded
