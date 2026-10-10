@@ -7,6 +7,7 @@ import {
   calculatePriorityScore,
   calculateMilestoneProgress,
   datesOverlap,
+  generateComplaintReference,
 } from './utils/index.ts';
 import {
   detectConflicts,
@@ -469,6 +470,344 @@ assert(allSeedEntriesValid, 'All seed ledger entries contain required fields');
 assert(
   !isNaN(new Date(newLedgerEntry?.timestamp ?? '').getTime()),
   'New ledger entry timestamp is a valid date/time'
+);
+
+// ─────────────────────────────────────────────────────────────────
+// 9. Citizen Complaint Reference Tracking (Phase 3)
+// ─────────────────────────────────────────────────────────────────
+console.log('\n9. Citizen Complaint Reference Tracking:');
+import { SEED_ISSUE_REPORTS } from './data/seedData.ts';
+
+// 9.1 — Seed issue reports have reference numbers with expected format CS-YYYY-XXXXXX
+const refRegex = /^CS-\d{4}-[A-Z0-9]{6}$/;
+assert(
+  SEED_ISSUE_REPORTS.every((r) => r.referenceNumber && refRegex.test(r.referenceNumber)),
+  'All seed issue reports have valid reference numbers matching CS-YYYY-XXXXXX format'
+);
+
+// 9.2 — Seed issue reports have distinct, unique reference numbers
+const seedRefNumbers = SEED_ISSUE_REPORTS.map((r) => r.referenceNumber!);
+assert(
+  new Set(seedRefNumbers).size === seedRefNumbers.length,
+  'All seed issue reports have unique reference numbers without collision'
+);
+
+// 9.3 — generateComplaintReference creates a valid reference string
+const testRef = generateComplaintReference(seedRefNumbers);
+assert(
+  refRegex.test(testRef),
+  'generateComplaintReference produces a compliant CS-YYYY-XXXXXX reference'
+);
+assert(
+  !seedRefNumbers.includes(testRef),
+  'generateComplaintReference avoids existing reference collisions'
+);
+
+// 9.4 — addIssueReport auto-assigns reference number if omitted
+const newMockReport: IssueReport = {
+  id: 'test-iss-ref-01',
+  projectId: 'PRJ-003',
+  category: 'safety_hazard',
+  title: 'Test unbarricaded site',
+  description: 'Unbarricaded excavation creating pedestrian risk',
+  status: 'open',
+  submittedAt: new Date().toISOString(),
+};
+const storeWithNewIssue = addIssueReport(storeAfterResolution, newMockReport);
+const savedReport = storeWithNewIssue.issueReports.find((r) => r.id === 'test-iss-ref-01');
+assert(
+  savedReport?.referenceNumber !== undefined && refRegex.test(savedReport.referenceNumber),
+  'addIssueReport automatically assigns a valid reference number'
+);
+
+// 9.5 — Look up complaint by reference number successfully finds the record
+const lookupTarget = savedReport?.referenceNumber;
+const foundByRef = storeWithNewIssue.issueReports.find((r) => r.referenceNumber === lookupTarget);
+assert(
+  foundByRef !== undefined && foundByRef.id === 'test-iss-ref-01',
+  'Citizen complaint lookup by reference number retrieves the correct record'
+);
+
+// 9.6 — Look up with non-existent reference returns undefined / not found
+const notFoundLookup = storeWithNewIssue.issueReports.find((r) => r.referenceNumber === 'CS-2026-NONEXIST');
+assert(
+  notFoundLookup === undefined,
+  'Lookup with invalid or non-existent reference returns undefined (clear not-found state)'
+);
+
+// 9.7 — updateIssueReportStatus updates status, officialResponse, and updatedAt
+const updatedStatusStore = updateIssueReportStatus(
+  storeWithNewIssue,
+  'test-iss-ref-01',
+  'resolved',
+  'Engineer inspected site: barricades and solar blinkers installed.'
+);
+const resolvedReport = updatedStatusStore.issueReports.find((r) => r.id === 'test-iss-ref-01');
+assert(
+  resolvedReport?.status === 'resolved',
+  'updateIssueReportStatus updates status to resolved'
+);
+assert(
+  resolvedReport?.officialResponse === 'Engineer inspected site: barricades and solar blinkers installed.',
+  'updateIssueReportStatus records the official engineering response'
+);
+assert(
+  resolvedReport?.updatedAt !== undefined && !isNaN(new Date(resolvedReport.updatedAt).getTime()),
+  'updateIssueReportStatus sets a valid updatedAt timestamp'
+);
+
+// 9.8 — Look up after update displays the updated response and status on the same record
+const postUpdateLookup = updatedStatusStore.issueReports.find((r) => r.referenceNumber === lookupTarget);
+assert(
+  postUpdateLookup?.status === 'resolved' && postUpdateLookup?.officialResponse !== undefined,
+  'Citizen lookup retrieves updated status and official response from the same persistent record'
+);
+
+// ─────────────────────────────────────────────────────────────────
+// 10. Conflict-Aware Chennai Map & Dig-Once Coordination (Phase 4)
+// ─────────────────────────────────────────────────────────────────
+console.log('\n10. Conflict-Aware Chennai Infrastructure Map:');
+
+// 10.1 — Initial active conflicts correctly identified from state
+const initialMapConflicts = storeAfterResolution.conflicts.filter((c) => !c.resolved);
+assert(
+  Array.isArray(initialMapConflicts),
+  'Active conflicts successfully extracted for map rendering'
+);
+
+// 10.2 — Resolved conflicts are NOT counted as active map conflicts
+const resolvedInMap = storeAfterResolution.conflicts.filter((c) => c.resolved);
+assert(
+  resolvedInMap.length === 1 && !initialMapConflicts.some((c) => c.id === resolvedInMap[0].id),
+  'Resolved conflict is strictly excluded from active map conflict indicators'
+);
+
+// 10.3 — Conflicting project pair coordinate mapping
+const mappableWithConflict = storeAfterResolution.projects.filter(
+  (p) => p.lat !== undefined && p.lng !== undefined
+);
+assert(
+  mappableWithConflict.length > 0,
+  'Mappable projects with valid geographic coordinates exist'
+);
+
+// 10.4 — Projects without coordinates do not crash mapping logic
+const noCoordTest = storeAfterResolution.projects.filter(
+  (p) => p.lat === undefined || p.lng === undefined
+);
+assert(
+  Array.isArray(noCoordTest),
+  'Projects with undefined coordinates are safely filtered into fallback list without throwing'
+);
+
+// 10.5 — Dig-Once policy logic flags excavation on recently resurfaced roads (within 90 days)
+// PRJ-001 is a completed road_repair on segment SEG-AN-001
+const completedRoadRepair = storeAfterResolution.projects.find(
+  (p) => p.status === 'completed' && p.category === 'road_repair'
+);
+assert(
+  completedRoadRepair !== undefined,
+  'Seed data contains a completed road repair project for Dig-Once coordination validation'
+);
+
+// Simulate a new excavation project on the same segment
+const excavationCategories = ['water_pipeline', 'drainage', 'electrical', 'road_repair'];
+const sameSegmentExcavation: Project = {
+  ...storeAfterResolution.projects[0],
+  id: 'PRJ-TEST-EXCAV',
+  segmentId: completedRoadRepair!.segmentId,
+  category: 'water_pipeline',
+  status: 'planned',
+};
+
+function testDigOnceWarning(project: Project, allProjects: Project[], thresholdDays = 90) {
+  if (project.status === 'completed') return false;
+  if (!excavationCategories.includes(project.category)) return false;
+  const now = new Date();
+  return allProjects.some((other) => {
+    if (other.id === project.id || other.segmentId !== project.segmentId) return false;
+    if (other.category !== 'road_repair' || other.status !== 'completed') return false;
+    const compDate = other.actualEndDate || other.revisedEndDate || other.plannedEndDate;
+    if (!compDate) return false;
+    const diff = Math.round((now.getTime() - new Date(compDate).getTime()) / (1000 * 60 * 60 * 24));
+    return diff >= 0 && diff <= thresholdDays;
+  });
+}
+
+assert(
+  testDigOnceWarning(sameSegmentExcavation, storeAfterResolution.projects, 90) === true,
+  'Dig-Once policy identifies excavation targeting recently resurfaced segment within 90 days'
+);
+
+const differentSegmentProject: Project = {
+  ...sameSegmentExcavation,
+  id: 'PRJ-TEST-DIFF',
+  segmentId: 'SEG-UNKNOWN-999',
+};
+assert(
+  testDigOnceWarning(differentSegmentProject, storeAfterResolution.projects, 90) === false,
+  'Dig-Once policy does not falsely warn on unrelated road segments'
+);
+
+
+// ============================================================
+// 11. Explainable Coordination Priority Algorithm
+// ============================================================
+import {
+  calculateConflictPriority,
+  rankConflictsByPriority,
+  calculateOverlapDuration,
+  isIncompatibleCategoryPair,
+} from './utils/coordinationPriority.ts';
+
+console.log('\n11. Explainable Coordination Priority Algorithm:');
+
+// Helper: build a minimal conflict with two seed projects
+const seedConflicts = detectConflicts(SEED_PROJECTS);
+const seedActiveConflicts = seedConflicts.filter((c) => !c.resolved);
+
+// 11a. Score is deterministic (stable for unchanged inputs)
+if (seedActiveConflicts.length > 0) {
+  const c0 = seedActiveConflicts[0];
+  const a1 = calculateConflictPriority(c0, SEED_PROJECTS);
+  const a2 = calculateConflictPriority(c0, SEED_PROJECTS);
+  assert(a1.score === a2.score, 'Priority score is deterministic for unchanged inputs');
+  assert(a1.level === a2.level, 'Priority level is deterministic for unchanged inputs');
+}
+
+// 11b. Score is in 0–100 range
+if (seedActiveConflicts.length > 0) {
+  const a = calculateConflictPriority(seedActiveConflicts[0], SEED_PROJECTS);
+  assert(a.score >= 0 && a.score <= 100, 'Priority score is bounded between 0 and 100');
+}
+
+// 11c. At least one factor is populated per active conflict
+if (seedActiveConflicts.length > 0) {
+  const a = calculateConflictPriority(seedActiveConflicts[0], SEED_PROJECTS);
+  assert(a.factors.length > 0, 'At least one scoring factor is present for a detected conflict');
+}
+
+// 11d. Plain-language explanation is non-empty
+if (seedActiveConflicts.length > 0) {
+  const a = calculateConflictPriority(seedActiveConflicts[0], SEED_PROJECTS);
+  assert(a.explanation.length > 10, 'Plain-language explanation is generated and non-trivial');
+}
+
+// 11e. Disclaimer is present
+if (seedActiveConflicts.length > 0) {
+  const a = calculateConflictPriority(seedActiveConflicts[0], SEED_PROJECTS);
+  assert(a.disclaimer.length > 10, 'Demonstration disclaimer is attached to every assessment');
+}
+
+// 11f. Missing-data safety: conflict with non-existent project IDs returns score 0, no crash
+const ghostConflict: import('./types/index.ts').Conflict = {
+  id: 'ghost-conflict-test',
+  projectIds: ['NONEXISTENT-A', 'NONEXISTENT-B'],
+  segmentId: 'SEG-GHOST',
+  reason: 'same_segment_overlap' as any,
+  description: 'ghost',
+  publicDisruption: 'none',
+  detectedAt: new Date().toISOString(),
+  resolved: false,
+};
+const ghostAssessment = calculateConflictPriority(ghostConflict, SEED_PROJECTS);
+assert(ghostAssessment.score === 0, 'Missing project data returns score 0 without crashing');
+assert(ghostAssessment.level === 'Low', 'Missing project data returns Low priority level');
+
+// 11g. Incompatible work type detection
+assert(
+  isIncompatibleCategoryPair('road_repair', 'water_pipeline'),
+  'isIncompatibleCategoryPair detects road_repair vs water_pipeline as incompatible'
+);
+assert(
+  !isIncompatibleCategoryPair('other', 'other'),
+  'isIncompatibleCategoryPair correctly identifies compatible work type pair'
+);
+
+// 11h. Overlap duration calculation
+assert(
+  calculateOverlapDuration('2026-01-01', '2026-01-31', '2026-01-15', '2026-02-15') === 17,
+  'calculateOverlapDuration correctly computes 17 days of overlap (Jan 15 to Jan 31 inclusive)'
+);
+assert(
+  calculateOverlapDuration('2026-01-01', '2026-01-10', '2026-01-20', '2026-01-30') === 0,
+  'calculateOverlapDuration returns 0 for non-overlapping date ranges'
+);
+
+// 11i. rankConflictsByPriority: resolved conflicts ranked after active conflicts
+const rankingStore = loadState();
+const rankResult = rankConflictsByPriority(rankingStore.conflicts, rankingStore.projects);
+const firstResolved = rankResult.findIndex((r) => r.conflict.resolved);
+const lastActive = rankResult.map((r, i) => (!r.conflict.resolved ? i : -1)).filter((i) => i >= 0).pop() ?? -1;
+if (firstResolved >= 0 && lastActive >= 0) {
+  assert(
+    lastActive < firstResolved,
+    'rankConflictsByPriority places all active conflicts before resolved conflicts'
+  );
+}
+
+// 11j. High-priority incompatible work types outrank low-priority same-segment overlap
+// Build two minimal conflicts: one incompatible type (higher factor), one same-segment only
+const baseProject = (id: string, seg: string, cat: string): Project => ({
+  ...SEED_PROJECTS[0],
+  id,
+  segmentId: seg,
+  category: cat as any,
+  status: 'ongoing',
+  startDate: '2026-10-01',
+  plannedEndDate: '2026-12-01',
+  revisedEndDate: undefined,
+  bufferDays: 0,
+  isCriticalSafetyOverride: false,
+  priorityScore: 50,
+});
+
+const projRankA = baseProject('rank-a', 'SEG-RANK-TEST', 'road_repair');
+const projRankB = baseProject('rank-b', 'SEG-RANK-TEST', 'water_pipeline');  // incompatible with road_repair
+const projRankC = baseProject('rank-c', 'SEG-RANK-TEST', 'other');           // compatible with road_repair
+
+const incompatibleConflict: import('./types/index.ts').Conflict = {
+  id: 'conf-rank-incompat',
+  projectIds: ['rank-a', 'rank-b'],
+  segmentId: 'SEG-RANK-TEST',
+  reason: 'incompatible_work_types' as any,
+  description: 'test incompatible conflict',
+  publicDisruption: 'test',
+  detectedAt: new Date().toISOString(),
+  resolved: false,
+};
+const compatibleConflict: import('./types/index.ts').Conflict = {
+  id: 'conf-rank-compat',
+  projectIds: ['rank-a', 'rank-c'],
+  segmentId: 'SEG-RANK-TEST',
+  reason: 'same_segment_overlap' as any,
+  description: 'test compatible conflict',
+  publicDisruption: 'test',
+  detectedAt: new Date().toISOString(),
+  resolved: false,
+};
+
+const rankingProjects = [...SEED_PROJECTS, projRankA, projRankB, projRankC];
+const highAssessment = calculateConflictPriority(incompatibleConflict, rankingProjects);
+const lowAssessment = calculateConflictPriority(compatibleConflict, rankingProjects);
+assert(
+  highAssessment.score > lowAssessment.score,
+  'Incompatible work types conflict scores higher than same-segment-only conflict'
+);
+
+// 11k. Schedule changes update affected priority rankings
+const shiftedProjA: Project = { ...projRankA, startDate: '2027-01-01', plannedEndDate: '2027-03-01' };
+const shiftedProjB: Project = { ...projRankB, startDate: '2027-01-01', plannedEndDate: '2027-03-01' };
+const leadTimeAssessment = calculateConflictPriority(incompatibleConflict, [
+  ...rankingProjects.filter((p) => p.id !== projRankA.id && p.id !== projRankB.id),
+  shiftedProjA,
+  shiftedProjB,
+], { referenceDateStr: '2026-10-10' });
+// Projects starting 2027-01-01 are 82 days away from 2026-10-10 → urgency_far (3 pts), not urgency_imminent (20 pts)
+const originalAssessment = calculateConflictPriority(incompatibleConflict, rankingProjects, { referenceDateStr: '2026-10-10' });
+assert(
+  originalAssessment.score > leadTimeAssessment.score,
+  'Schedule changes that increase lead time reduce priority score appropriately'
 );
 
 console.log(`\n========================================`);

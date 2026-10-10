@@ -28,6 +28,12 @@ import {
   FileText,
   AlertCircle,
   Eye,
+  Copy,
+  Check,
+  Hash,
+  ExternalLink,
+  RotateCcw,
+  Info,
 } from 'lucide-react';
 import {
   BarChart,
@@ -45,6 +51,7 @@ import {
   formatDate,
   formatDateTime,
   generateId,
+  generateComplaintReference,
   STATUS_LABELS,
   STATUS_COLORS,
   CATEGORY_LABELS,
@@ -62,8 +69,19 @@ export default function PublicFeedback() {
   } = useApp();
   const { projects, reviews, issueReports } = state;
 
-  // Tab state between Reviews and Issue Reports
-  const [feedbackTab, setFeedbackTab] = useState<'reviews' | 'issues'>('reviews');
+  // Tab state between Reviews, Issue Reports, and Track Complaint
+  const [feedbackTab, setFeedbackTab] = useState<'reviews' | 'issues' | 'track'>('reviews');
+
+  // Complaint Tracking state
+  const [lookupRef, setLookupRef] = useState('');
+  const [searchedRef, setSearchedRef] = useState<string | null>(null);
+  const [submittedReference, setSubmittedReference] = useState<string | null>(null);
+  const [copiedRef, setCopiedRef] = useState(false);
+
+  // Government Official Response Modal state
+  const [respondingIssue, setRespondingIssue] = useState<IssueReport | null>(null);
+  const [officialStatusInput, setOfficialStatusInput] = useState<IssueReportStatus>('under_review');
+  const [officialResponseText, setOfficialResponseText] = useState('');
 
   // Search & Filter state for Public Browser
   const [searchQuery, setSearchQuery] = useState('');
@@ -232,29 +250,49 @@ export default function PublicFeedback() {
       return;
     }
 
+    const existingRefs = issueReports.map((r) => r.referenceNumber).filter(Boolean) as string[];
+    const referenceNumber = generateComplaintReference(existingRefs);
+    const now = new Date().toISOString();
+
     const newReport: IssueReport = {
       id: generateId('iss'),
+      referenceNumber,
       projectId: issueProjectId,
       category: issueCategory,
       title: issueTitle.trim(),
       description: issueDescription.trim(),
       locationDetails: issueLocation.trim() || undefined,
       status: 'open',
-      submittedAt: new Date().toISOString(),
+      submittedAt: now,
+      updatedAt: now,
       reporterName: issueReporter.trim() || 'Concerned Resident',
     };
 
     addIssueReport(newReport);
+    setSubmittedReference(referenceNumber);
     setIssueSuccess(true);
     setIssueTitle('');
     setIssueDescription('');
     setIssueLocation('');
     setIssueReporter('');
-
-    setTimeout(() => {
-      setIssueSuccess(false);
-    }, 4000);
   };
+
+  const handleTrackComplaint = (refToTrack?: string) => {
+    const target = refToTrack !== undefined ? refToTrack : lookupRef;
+    if (!target.trim()) return;
+    setSearchedRef(target.trim());
+    setFeedbackTab('track');
+  };
+
+  const trackedIssue = useMemo(() => {
+    if (!searchedRef) return null;
+    const clean = searchedRef.trim().toUpperCase();
+    return issueReports.find(
+      (r) =>
+        (r.referenceNumber && r.referenceNumber.toUpperCase() === clean) ||
+        r.id.toUpperCase() === clean
+    );
+  }, [searchedRef, issueReports]);
 
   const filteredIssueReports = useMemo(() => {
     return issueReports.filter((r) => {
@@ -593,17 +631,24 @@ export default function PublicFeedback() {
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
                 Citizen Reviews & Quality Ratings
               </>
-            ) : (
+            ) : feedbackTab === 'issues' ? (
               <>
                 <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Citizen Issue Reports & Grievances
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                Citizen Complaint Reference Tracker
               </>
             )}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {feedbackTab === 'reviews'
               ? 'Public evaluation of delivered infrastructure projects.'
-              : 'Direct citizen issue reports regarding active worksites, safety hazards, and disruptions.'}
+              : feedbackTab === 'issues'
+              ? 'Direct citizen issue reports regarding active worksites, safety hazards, and disruptions.'
+              : 'Look up complaint status, engineering responses, and resolution progress using your tracking reference.'}
           </p>
         </div>
 
@@ -629,6 +674,17 @@ export default function PublicFeedback() {
           >
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>Citizen Issue Reports ({issueReports.length})</span>
+          </button>
+          <button
+            onClick={() => setFeedbackTab('track')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition ${
+              feedbackTab === 'track'
+                ? 'bg-white dark:bg-gray-700 text-teal-800 dark:text-teal-300 shadow-sm font-bold'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            <span>Track Complaint by Ref</span>
           </button>
         </div>
       </div>
@@ -865,7 +921,7 @@ export default function PublicFeedback() {
             </div>
           </div>
         </div>
-      ) : (
+      ) : feedbackTab === 'issues' ? (
         /* Tab 2: Issue Reports */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Issue Submission Form */}
@@ -881,9 +937,47 @@ export default function PublicFeedback() {
             </div>
 
             {issueSuccess && (
-              <div className="p-3 bg-green-50 dark:bg-green-950/60 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-xl text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                <span>Issue report logged! It has been dispatched to municipal inspectors.</span>
+              <div className="p-3.5 bg-green-50 dark:bg-green-950/60 text-green-900 dark:text-green-200 border border-green-200 dark:border-green-800 rounded-xl text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-green-800 dark:text-green-300">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  <span>Citizen grievance report submitted!</span>
+                </div>
+                {submittedReference && (
+                  <div className="bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-green-200 dark:border-green-800 space-y-1.5">
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Tracking Reference:
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs font-bold text-teal-700 dark:text-teal-300 tracking-wider">
+                        {submittedReference}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(submittedReference);
+                            setCopiedRef(true);
+                            setTimeout(() => setCopiedRef(false), 2000);
+                          }}
+                          className="px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1"
+                        >
+                          {copiedRef ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3 text-gray-400" />}
+                          {copiedRef ? 'Copied' : 'Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLookupRef(submittedReference);
+                            handleTrackComplaint(submittedReference);
+                          }}
+                          className="px-2 py-0.5 rounded bg-teal-600 text-white text-[10px] font-medium hover:bg-teal-700"
+                        >
+                          Track Now →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1030,8 +1124,13 @@ export default function PublicFeedback() {
                     >
                       <div className="flex items-start justify-between gap-2 flex-wrap">
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">{iss.title}</span>
+                            {iss.referenceNumber && (
+                              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-teal-800 dark:text-teal-300 font-bold border border-gray-200 dark:border-gray-650">
+                                Ref: {iss.referenceNumber}
+                              </span>
+                            )}
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusConfig.color}`}>
                               {statusConfig.label}
                             </span>
@@ -1042,14 +1141,28 @@ export default function PublicFeedback() {
                           </div>
                         </div>
 
-                        {targetProj && (
-                          <NavLink
-                            to={`/projects/${targetProj.id}`}
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-medium"
-                          >
-                            {targetProj.title} →
-                          </NavLink>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {iss.referenceNumber && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLookupRef(iss.referenceNumber!);
+                                handleTrackComplaint(iss.referenceNumber);
+                              }}
+                              className="text-teal-600 dark:text-teal-400 hover:underline text-[11px] font-semibold flex items-center gap-0.5"
+                            >
+                              Track Status →
+                            </button>
+                          )}
+                          {targetProj && (
+                            <NavLink
+                              to={`/projects/${targetProj.id}`}
+                              className="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-medium"
+                            >
+                              {targetProj.title} →
+                            </NavLink>
+                          )}
+                        </div>
                       </div>
 
                       <p className="text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50/70 dark:bg-gray-800/80 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
@@ -1068,23 +1181,24 @@ export default function PublicFeedback() {
                         <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2 flex-wrap">
                           <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Government Official Action:</span>
                           <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRespondingIssue(iss);
+                                setOfficialStatusInput(iss.status);
+                                setOfficialResponseText(iss.officialResponse || '');
+                              }}
+                              className="px-2.5 py-1 text-[11px] rounded bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 font-semibold border border-teal-200 dark:border-teal-800 transition"
+                            >
+                              Update Status & Response
+                            </button>
                             {iss.status !== 'under_review' && (
                               <button
+                                type="button"
                                 onClick={() => updateIssueReportStatus(iss.id, 'under_review')}
                                 className="px-2.5 py-1 text-[11px] rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 font-medium border border-blue-200 dark:border-blue-800 transition"
                               >
                                 Mark Under Review
-                              </button>
-                            )}
-                            {iss.status !== 'resolved' && (
-                              <button
-                                onClick={() => {
-                                  const resp = window.prompt('Enter official resolution note for the public record:');
-                                  updateIssueReportStatus(iss.id, 'resolved', resp || 'Inspected and resolved by municipal civil team.');
-                                }}
-                                className="px-2.5 py-1 text-[11px] rounded bg-green-50 dark:bg-green-950/60 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/60 font-medium border border-green-200 dark:border-green-800 transition"
-                              >
-                                Mark Resolved
                               </button>
                             )}
                           </div>
@@ -1094,6 +1208,409 @@ export default function PublicFeedback() {
                   );
                 })
               )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Tab 3: Track Complaint by Reference */
+        <div className="space-y-6">
+          {/* Tracking Search Card */}
+          <div className="card p-6 bg-gradient-to-r from-teal-50/80 via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-teal-950/20 border border-teal-200 dark:border-teal-800 space-y-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg flex items-center gap-2">
+                  <Search className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  Citizen Grievance & Complaint Tracker
+                </h3>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 max-w-xl">
+                  Enter your unique municipal complaint reference (e.g. <span className="font-mono font-semibold">CS-2026-ABC123</span>) to check the real-time inspection status and review the engineering team’s official response.
+                </p>
+              </div>
+              <div className="text-[11px] px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 rounded-lg">
+                ⚠️ Client-Side Demo Grievance Log
+              </div>
+            </div>
+
+            {/* Input & Track Button */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleTrackComplaint();
+              }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+            >
+              <div className="relative flex-1">
+                <Hash className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Enter reference number (e.g. CS-2026-KAS821)…"
+                  value={lookupRef}
+                  onChange={(e) => setLookupRef(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-650 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-mono focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 shrink-0"
+              >
+                <Search className="w-4 h-4" />
+                Track Complaint
+              </button>
+            </form>
+
+            {/* Clickable Quick Examples */}
+            <div className="flex items-center gap-2 flex-wrap text-xs pt-1">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">Try demonstration references:</span>
+              {[
+                { ref: 'CS-2026-KAS821', label: 'Kasturba Nagar (Under Review)' },
+                { ref: 'CS-2026-VEL449', label: 'Velachery (Resolved)' },
+                { ref: 'CS-2026-MYL105', label: 'Mylapore (Open)' },
+              ].map((ex) => (
+                <button
+                  key={ex.ref}
+                  type="button"
+                  onClick={() => {
+                    setLookupRef(ex.ref);
+                    handleTrackComplaint(ex.ref);
+                  }}
+                  className="px-2.5 py-1 rounded-lg border border-teal-200 dark:border-teal-800/80 bg-teal-50/70 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 font-mono text-[11px] hover:bg-teal-100 dark:hover:bg-teal-900 transition"
+                >
+                  {ex.ref} <span className="font-sans text-[10px] text-teal-600 dark:text-teal-400">({ex.label.split(' ')[0]})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Result States */}
+          {searchedRef && trackedIssue ? (
+            /* Found State */
+            <div className="card p-6 border-teal-300 dark:border-teal-700 shadow-md space-y-5 animate-fade-in">
+              <div className="flex items-start justify-between gap-4 flex-wrap pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-extrabold bg-teal-100 dark:bg-teal-950/70 text-teal-900 dark:text-teal-200 px-3 py-1 rounded-lg border border-teal-300 dark:border-teal-800 flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5" />
+                      {trackedIssue.referenceNumber || trackedIssue.id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(trackedIssue.referenceNumber || trackedIssue.id);
+                        setCopiedRef(true);
+                        setTimeout(() => setCopiedRef(false), 2000);
+                      }}
+                      className="px-2 py-1 text-[11px] rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1"
+                    >
+                      {copiedRef ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3 text-gray-400" />}
+                      {copiedRef ? 'Copied' : 'Copy'}
+                    </button>
+                    {/* Status badge */}
+                    {trackedIssue.status === 'open' && (
+                      <span className="badge bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-semibold px-2.5 py-0.5">
+                        Open — Awaiting Municipal Inspection
+                      </span>
+                    )}
+                    {trackedIssue.status === 'under_review' && (
+                      <span className="badge bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 text-xs font-semibold px-2.5 py-0.5">
+                        Under Municipal Review — Inspection Assigned
+                      </span>
+                    )}
+                    {trackedIssue.status === 'resolved' && (
+                      <span className="badge bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-700 text-xs font-semibold px-2.5 py-0.5">
+                        Resolved — Corrective Action Completed
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 pt-1">
+                    {trackedIssue.title}
+                  </h3>
+                </div>
+
+                <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                  <div>Submitted: <span className="font-semibold text-gray-700 dark:text-gray-300">{formatDateTime(trackedIssue.submittedAt)}</span></div>
+                  {trackedIssue.updatedAt && (
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      Last Updated: {formatDateTime(trackedIssue.updatedAt)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Related Project Information */}
+              {(() => {
+                const relatedProj = projects.find((p) => p.id === trackedIssue.projectId);
+                return relatedProj ? (
+                  <div className="bg-gray-50 dark:bg-gray-750 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-xs space-y-1.5">
+                    <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Associated Public Works Project
+                    </div>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                        {relatedProj.title}
+                      </div>
+                      <NavLink
+                        to={`/projects/${relatedProj.id}`}
+                        className="text-teal-600 dark:text-teal-400 hover:underline font-medium flex items-center gap-1"
+                      >
+                        View Project Full Details <ExternalLink className="w-3 h-3" />
+                      </NavLink>
+                    </div>
+                    <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300 text-[11px] flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-gray-400" /> {relatedProj.department}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-gray-400" /> {relatedProj.location}, {relatedProj.neighborhood}
+                      </span>
+                      <span className="font-mono text-gray-400">Segment: {relatedProj.segmentId}</span>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Description & Location */}
+              <div className="space-y-2 text-xs">
+                <div className="font-bold text-gray-700 dark:text-gray-300">Issue Description</div>
+                <div className="p-3.5 bg-gray-50/70 dark:bg-gray-800/80 rounded-xl border border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 leading-relaxed">
+                  {trackedIssue.description}
+                </div>
+                {trackedIssue.locationDetails && (
+                  <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 text-xs">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Location Details: <strong className="text-gray-700 dark:text-gray-300">{trackedIssue.locationDetails}</strong></span>
+                  </div>
+                )}
+                {trackedIssue.reporterName && (
+                  <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-[11px]">
+                    <User className="w-3 h-3 text-gray-400" />
+                    <span>Reported by: {trackedIssue.reporterName}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Official Municipal Response */}
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  Official Municipal Engineering Response
+                </div>
+                {trackedIssue.officialResponse ? (
+                  <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-200 text-xs space-y-1">
+                    <div className="font-semibold text-teal-800 dark:text-teal-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      Recorded Official Finding & Mitigation Action:
+                    </div>
+                    <p className="leading-relaxed pl-5 text-gray-800 dark:text-gray-200">
+                      {trackedIssue.officialResponse}
+                    </p>
+                    {trackedIssue.updatedAt && (
+                      <div className="text-[10px] text-teal-700 dark:text-teal-400 pl-5 pt-1">
+                        Recorded timestamp: {formatDateTime(trackedIssue.updatedAt)}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs">
+                    No official engineering response has been logged yet for this report. The municipal coordination cell typically investigates and updates active reports within 24–48 working hours.
+                  </div>
+                )}
+              </div>
+
+              {/* Government Coordinator Action */}
+              {isGovernment && (
+                <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 flex-wrap bg-blue-50/50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                  <div className="text-xs text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    <span className="font-semibold">Coordinator Administration:</span> Update this complaint’s official resolution note or status.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRespondingIssue(trackedIssue);
+                      setOfficialStatusInput(trackedIssue.status);
+                      setOfficialResponseText(trackedIssue.officialResponse || '');
+                    }}
+                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+                  >
+                    Update Official Response & Status
+                  </button>
+                </div>
+              )}
+
+              {/* Demo Notice */}
+              <div className="text-[11px] text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-750 flex items-start gap-1.5">
+                <Info className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Demonstration Data:</strong> This record is stored in your client-side browser session for demonstration purposes and is not connected to a live municipal ticketing system.
+                </span>
+              </div>
+            </div>
+          ) : searchedRef ? (
+            /* Not Found State */
+            <div className="card p-8 border-red-200 dark:border-red-900 text-center space-y-3 animate-fade-in">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h4 className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                No Complaint Found with Reference: <span className="font-mono text-red-600 dark:text-red-400">{searchedRef}</span>
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                Please double-check the tracking code. Valid complaint references follow the pattern <span className="font-mono font-semibold">CS-2026-XXXXXX</span>.
+              </p>
+              <div className="pt-2 flex justify-center gap-2 flex-wrap text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLookupRef('');
+                    setSearchedRef(null);
+                  }}
+                  className="px-4 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Clear Search
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLookupRef('CS-2026-KAS821');
+                    handleTrackComplaint('CS-2026-KAS821');
+                  }}
+                  className="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium"
+                >
+                  Try Sample: CS-2026-KAS821
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Initial Empty State */
+            <div className="card p-8 text-center space-y-4 bg-gray-50/50 dark:bg-gray-800/50">
+              <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 mx-auto flex items-center justify-center">
+                <Search className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                  Track Any Infrastructure Complaint in Chennai
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-lg mx-auto mt-1">
+                  Enter your complaint reference in the search box above to check if work crews have inspected the site, viewed contractor logs, or posted an official response.
+                </p>
+              </div>
+              <div className="max-w-xl mx-auto pt-2">
+                <div className="text-xs font-bold text-gray-700 dark:text-gray-300 text-left mb-2">
+                  Recent Grievances Logged in System:
+                </div>
+                <div className="space-y-2 text-left">
+                  {issueReports.slice(0, 3).map((rep) => (
+                    <div
+                      key={rep.id}
+                      className="p-3 bg-white dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {rep.title}
+                        </div>
+                        <div className="text-[11px] text-gray-400 font-mono">
+                          Ref: {rep.referenceNumber || rep.id} · {formatDateTime(rep.submittedAt)}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ref = rep.referenceNumber || rep.id;
+                          setLookupRef(ref);
+                          handleTrackComplaint(ref);
+                        }}
+                        className="px-3 py-1 bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 rounded-lg text-xs font-semibold hover:bg-teal-100 shrink-0"
+                      >
+                        Track Status →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Official Response Modal (Replaces window.prompt) */}
+      {respondingIssue && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                  Official Municipal Action & Response
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-mono">
+                  {respondingIssue.referenceNumber ? `Ref: ${respondingIssue.referenceNumber}` : respondingIssue.id}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRespondingIssue(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Complaint: </span>
+                <span className="text-gray-900 dark:text-gray-100 font-medium">{respondingIssue.title}</span>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Update Status *
+                </label>
+                <select
+                  value={officialStatusInput}
+                  onChange={(e) => setOfficialStatusInput(e.target.value as IssueReportStatus)}
+                  className="w-full text-xs p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="open">Open (Under initial observation)</option>
+                  <option value="under_review">Under Municipal Review (Inspection team assigned)</option>
+                  <option value="resolved">Resolved (Corrective engineering action completed)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Official Resolution / Inspection Note *
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Detail municipal findings, inspection actions, or mitigation timeline…"
+                  value={officialResponseText}
+                  onChange={(e) => setOfficialResponseText(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => setRespondingIssue(null)}
+                className="px-4 py-2 text-xs rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateIssueReportStatus(
+                    respondingIssue.id,
+                    officialStatusInput,
+                    officialResponseText.trim() || undefined
+                  );
+                  setRespondingIssue(null);
+                }}
+                className="px-4 py-2 text-xs rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-sm"
+              >
+                Save Official Record
+              </button>
             </div>
           </div>
         </div>

@@ -165,6 +165,23 @@ export function generateId(prefix = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function generateComplaintReference(existingRefs: string[] = []): string {
+  const year = new Date().getFullYear();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const existingSet = new Set(existingRefs.map((r) => r.toUpperCase()));
+  let ref = '';
+  let attempts = 0;
+  do {
+    let suffix = '';
+    for (let i = 0; i < 6; i++) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    ref = `CS-${year}-${suffix}`;
+    attempts++;
+  } while (existingSet.has(ref) && attempts < 100);
+  return ref;
+}
+
 // ── Status helpers ────────────────────────────────────────────
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -248,3 +265,18 @@ export function pluralise(n: number, singular: string, plural?: string): string 
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+// ── Calendar Helpers Re-exports ───────────────────────────────
+export { addDaysToDateStr, daysBetweenDateStr } from './conflictDetection';
+
+// ── Explainable Coordination Priority Re-exports ─────────────
+export {
+  calculateConflictPriority,
+  rankConflictsByPriority,
+  attachPriorityAssessments,
+  checkDigOnceRisk,
+  calculateOverlapDuration,
+  isIncompatibleCategoryPair,
+} from './coordinationPriority';
+
+

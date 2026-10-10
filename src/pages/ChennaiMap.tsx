@@ -9,19 +9,19 @@
 // ============================================================
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { NavLink } from 'react-router-dom'
 import {
-  Map, Filter, AlertTriangle, CheckCircle2, Clock,
+  Map as MapIcon, Filter, AlertTriangle, CheckCircle2, Clock,
   Flame, ChevronRight, Building2, Calendar, MapPin,
-  List, X, Info
+  List, X, Info, Shield, Layers, ExternalLink
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { formatDate, STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from '../utils'
+import { formatDate, STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, calculateConflictPriority } from '../utils'
 import clsx from 'clsx'
-import type { Project, ProjectCategory, ProjectStatus } from '../types'
+import type { Project, ProjectCategory, ProjectStatus, Conflict, ConflictPriorityAssessment } from '../types'
 
 // ─── Fix Leaflet default marker icon paths broken by Vite bundling ───────────
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -48,17 +48,67 @@ const CATEGORY_ICONS: Record<ProjectCategory, string> = {
   other: '🏗️',
 }
 
-function createColoredIcon(color: string, emoji: string) {
+// ─── Accessible Conflict-Aware Pin Generator ──────────────────────────────────
+function createProjectMarkerIcon(
+  color: string,
+  emoji: string,
+  isConflict: boolean,
+  isDelayed: boolean
+) {
+  if (isConflict) {
+    // Accessible indicator: High-contrast dashed boundary + warning badge with ⚠️
+    return L.divIcon({
+      className: 'conflict-map-marker',
+      html: `
+        <div style="position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+          <div style="
+            position:absolute; inset:-4px;
+            border:3px dashed #ea580c;
+            border-radius:50%;
+            background:rgba(234, 88, 12, 0.22);
+          "></div>
+          <div style="
+            width:36px; height:36px;
+            background:${color};
+            border:3px solid #ea580c;
+            border-radius:50% 50% 50% 0;
+            transform:rotate(-45deg);
+            box-shadow:0 3px 10px rgba(234,88,12,0.6);
+            display:flex; align-items:center; justify-content:center;
+          ">
+            <span style="transform:rotate(45deg); font-size:14px; line-height:1;">${emoji}</span>
+          </div>
+          <div style="
+            position:absolute; top:-5px; right:-5px;
+            width:20px; height:20px;
+            background:#ea580c;
+            color:#ffffff;
+            border:2px solid #ffffff;
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:11px; font-weight:bold;
+            box-shadow:0 2px 4px rgba(0,0,0,0.35);
+          " title="Active Scheduling Conflict">⚠️</div>
+        </div>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 40],
+      popupAnchor: [0, -42],
+    })
+  }
+
+  const border = isDelayed ? '3px solid #ef4444' : '3px solid white'
+  const shadow = isDelayed ? '0 2px 8px rgba(239,68,68,0.5)' : '0 2px 8px rgba(0,0,0,0.35)'
+
   return L.divIcon({
     className: '',
     html: `
       <div style="
         width:36px; height:36px;
         background:${color};
-        border:3px solid white;
+        border:${border};
         border-radius:50% 50% 50% 0;
         transform:rotate(-45deg);
-        box-shadow:0 2px 8px rgba(0,0,0,0.35);
+        box-shadow:${shadow};
         display:flex; align-items:center; justify-content:center;
       ">
         <span style="transform:rotate(45deg); font-size:14px; line-height:1;">${emoji}</span>
@@ -67,6 +117,33 @@ function createColoredIcon(color: string, emoji: string) {
     iconAnchor: [18, 36],
     popupAnchor: [0, -38],
   })
+}
+
+// ─── Dig-Once Policy Helper (recently resurfaced road within 90 days) ───────────
+function getDigOnceWarning(
+  project: Project,
+  allProjects: Project[],
+  thresholdDays = 90
+): { isDigOnceRisk: boolean; resurfacedProject?: Project; daysSinceResurfacing?: number } {
+  if (project.status === 'completed') return { isDigOnceRisk: false }
+  const excavationCategories = ['water_pipeline', 'drainage', 'electrical', 'road_repair']
+  if (!excavationCategories.includes(project.category)) return { isDigOnceRisk: false }
+
+  const now = new Date()
+  for (const other of allProjects) {
+    if (other.id === project.id) continue
+    if (other.segmentId !== project.segmentId) continue
+    if (other.category !== 'road_repair') continue
+    if (other.status !== 'completed') continue
+    const compDate = other.actualEndDate || other.revisedEndDate || other.plannedEndDate
+    if (!compDate) continue
+    const d = new Date(compDate)
+    const diffDays = Math.round((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
+    if (diffDays >= 0 && diffDays <= thresholdDays) {
+      return { isDigOnceRisk: true, resurfacedProject: other, daysSinceResurfacing: diffDays }
+    }
+  }
+  return { isDigOnceRisk: false }
 }
 
 // ─── Flyto helper — imperative map control ────────────────────────────────────
@@ -87,9 +164,57 @@ export default function ChennaiMap() {
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | 'all'>('all')
   const [departmentFilter, setDepartmentFilter] = useState<string>('all')
+  const [onlyConflicts, setOnlyConflicts] = useState(false)
   const [showList, setShowList] = useState(false)
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null)
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
+
+  // Active conflicts (excluding resolved)
+  const activeConflicts = useMemo(() => {
+    return (state.conflicts || []).filter((c) => !c.resolved)
+  }, [state.conflicts])
+
+  // Map each project ID to its active conflicts
+  const projectActiveConflicts = useMemo(() => {
+    const map = new Map<string, Conflict[]>()
+    for (const conflict of activeConflicts) {
+      for (const pId of conflict.projectIds) {
+        const list = map.get(pId) || []
+        list.push(conflict)
+        map.set(pId, list)
+      }
+    }
+    return map
+  }, [activeConflicts])
+
+  // Conflict connecting corridors between projects with coordinates
+  const conflictLines = useMemo(() => {
+    const lines: {
+      conflictId: string
+      positions: [[number, number], [number, number]]
+      projectA: Project
+      projectB: Project
+      segmentId: string
+      reason: string
+    }[] = []
+
+    for (const c of activeConflicts) {
+      if (c.projectIds.length < 2) continue
+      const pA = state.projects.find((p) => p.id === c.projectIds[0])
+      const pB = state.projects.find((p) => p.id === c.projectIds[1])
+      if (pA?.lat !== undefined && pA?.lng !== undefined && pB?.lat !== undefined && pB?.lng !== undefined) {
+        lines.push({
+          conflictId: c.id,
+          positions: [[pA.lat, pA.lng], [pB.lat, pB.lng]],
+          projectA: pA,
+          projectB: pB,
+          segmentId: c.segmentId || 'Unknown Segment',
+          reason: c.reason,
+        })
+      }
+    }
+    return lines
+  }, [activeConflicts, state.projects])
 
   // Collect unique departments
   const departments = useMemo(
@@ -104,9 +229,10 @@ export default function ChennaiMap() {
       const statusOk = statusFilter === 'all' || p.status === statusFilter
       const categoryOk = categoryFilter === 'all' || p.category === categoryFilter
       const deptOk = departmentFilter === 'all' || p.department === departmentFilter
-      return hasCoords && statusOk && categoryOk && deptOk
+      const conflictOk = !onlyConflicts || projectActiveConflicts.has(p.id)
+      return hasCoords && statusOk && categoryOk && deptOk && conflictOk
     })
-  }, [state.projects, statusFilter, categoryFilter, departmentFilter])
+  }, [state.projects, statusFilter, categoryFilter, departmentFilter, onlyConflicts, projectActiveConflicts])
 
   // Projects without coordinates — show in fallback list
   const noCoordProjects = useMemo(() => {
@@ -141,7 +267,7 @@ export default function ChennaiMap() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-teal-600 rounded-lg flex items-center justify-center">
-              <Map className="w-5 h-5 text-white" />
+              <MapIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Chennai Infrastructure Map</h1>
@@ -224,10 +350,35 @@ export default function ChennaiMap() {
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
+
+          {/* Conflict filter toggle */}
+          <button
+            onClick={() => setOnlyConflicts(!onlyConflicts)}
+            className={clsx(
+              'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-semibold transition-all',
+              onlyConflicts
+                ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                : 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100'
+            )}
+          >
+            <AlertTriangle className={clsx('w-3.5 h-3.5', onlyConflicts ? 'text-white' : 'text-orange-600 dark:text-orange-400')} />
+            <span>
+              {onlyConflicts ? 'Showing Conflicts Only' : `Filter by Conflicts (${activeConflicts.length})`}
+            </span>
+          </button>
         </div>
 
-        {/* Status legend */}
-        <div className="mt-2 flex flex-wrap gap-3">
+        {/* Accessible Marker & Status Legend */}
+        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs">
+          {/* Conflict warning legend */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/50 text-orange-800 dark:text-orange-200 font-semibold">
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-dashed border-orange-600 flex items-center justify-center text-[9px] font-bold">
+              ⚠️
+            </span>
+            <span>Conflict Alert (Dashed Orange Ring)</span>
+          </div>
+
+          {/* Standard Statuses */}
           {(Object.entries(STATUS_MARKER_COLORS) as [ProjectStatus, string][]).map(([status, color]) => (
             <button
               key={status}
@@ -262,35 +413,46 @@ export default function ChennaiMap() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Click to focus on the map</p>
             </div>
             <div className="divide-y divide-gray-50 dark:divide-gray-700">
-              {mappableProjects.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => handleListClick(project)}
-                  className={clsx(
-                    'w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-colors',
-                    activeProjectId === project.id && 'bg-teal-50 dark:bg-teal-950/40 border-l-4 border-teal-500'
-                  )}
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="text-lg mt-0.5">{CATEGORY_ICONS[project.category]}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{project.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {project.neighborhood}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span
-                          className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[project.status])}
-                        >
-                          {STATUS_LABELS[project.status]}
-                        </span>
+              {mappableProjects.map((project) => {
+                const conflicts = projectActiveConflicts.get(project.id) || []
+                const hasConflict = conflicts.length > 0
+                return (
+                  <button
+                    key={project.id}
+                    onClick={() => handleListClick(project)}
+                    className={clsx(
+                      'w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-colors',
+                      activeProjectId === project.id && 'bg-teal-50 dark:bg-teal-950/40 border-l-4 border-teal-500'
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg mt-0.5">{CATEGORY_ICONS[project.category]}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{project.title}</p>
+                          {hasConflict && (
+                            <span className="shrink-0 text-[10px] px-1.5 py-0.2 rounded bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 font-bold border border-orange-300 dark:border-orange-700" title="Scheduling Conflict">
+                              ⚠️ Conflict
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {project.neighborhood}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[project.status])}
+                          >
+                            {STATUS_LABELS[project.status]}
+                          </span>
+                        </div>
                       </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
-                  </div>
-                </button>
-              ))}
+                  </button>
+                )
+              })}
 
               {noCoordProjects.length > 0 && (
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-750">
@@ -308,7 +470,7 @@ export default function ChennaiMap() {
           {mappableProjects.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 z-10 pointer-events-none">
               <div className="text-center max-w-xs">
-                <Map className="w-12 h-12 text-gray-300 dark:text-gray-650 mx-auto mb-3" />
+                <MapIcon className="w-12 h-12 text-gray-300 dark:text-gray-650 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400 font-medium">No projects match the current filters</p>
                 <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Try clearing a filter to see more projects</p>
               </div>
@@ -328,107 +490,254 @@ export default function ChennaiMap() {
 
             <MapFlyTo target={flyTarget} />
 
-            {mappableProjects.map((project) => (
-              <Marker
-                key={project.id}
-                position={[project.lat!, project.lng!]}
-                icon={createColoredIcon(
-                  STATUS_MARKER_COLORS[project.status],
-                  CATEGORY_ICONS[project.category]
-                )}
-                eventHandlers={{
-                  click: () => setActiveProjectId(project.id),
+            {/* Connecting conflict corridors between project coordinates */}
+            {conflictLines.map((line) => (
+              <Polyline
+                key={line.conflictId}
+                positions={line.positions}
+                pathOptions={{
+                  color: '#ea580c',
+                  weight: 3.5,
+                  dashArray: '6, 8',
+                  opacity: 0.85,
                 }}
               >
-                <Popup minWidth={280} maxWidth={320}>
-                  <div className="font-sans">
-                    {/* Status badge */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className={clsx(
-                          'text-xs px-2 py-0.5 rounded-full font-semibold',
-                          STATUS_COLORS[project.status]
-                        )}
-                      >
-                        {STATUS_LABELS[project.status]}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {CATEGORY_ICONS[project.category]} {CATEGORY_LABELS[project.category]}
-                      </span>
+                <Popup minWidth={260} maxWidth={300}>
+                  <div className="font-sans text-xs space-y-1.5 p-1">
+                    <div className="flex items-center gap-1.5 font-bold text-orange-700">
+                      <AlertTriangle className="w-4 h-4 text-orange-600" />
+                      <span>Scheduling Conflict Corridor</span>
                     </div>
-
-                    {/* Title */}
-                    <p className="font-bold text-gray-900 text-sm leading-snug mb-2">
-                      {project.title}
+                    <p className="text-gray-700 leading-snug">
+                      Potential excavation overlap on shared segment <strong className="font-mono">{line.segmentId}</strong>.
                     </p>
-
-                    {/* Key info */}
-                    <div className="space-y-1 text-xs text-gray-700">
-                      <div className="flex items-start gap-1.5">
-                        <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <span>{project.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                        <span>{project.department}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                        <span>
-                          Due: {formatDate(project.revisedEndDate ?? project.plannedEndDate)}
-                          {project.revisedEndDate && (
-                            <span className="ml-1 text-orange-600">(revised)</span>
-                          )}
-                        </span>
-                      </div>
+                    <div className="bg-orange-50 p-2 rounded border border-orange-200 space-y-1 text-[11px]">
+                      <div><strong>Project 1:</strong> {line.projectA.title} ({line.projectA.department})</div>
+                      <div><strong>Project 2:</strong> {line.projectB.title} ({line.projectB.department})</div>
                     </div>
-
-                    {/* Progress bar */}
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                        <span>Progress</span>
-                        <span className="font-medium">{project.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div
-                          className="h-1.5 rounded-full bg-teal-500 transition-all"
-                          style={{ width: `${project.progress}%` }}
-                        />
-                      </div>
+                    <div className="text-[10px] text-gray-400 italic">
+                      Approximate project-level indicator; does not represent exact trench boundaries.
                     </div>
-
-                    {/* Alternative route */}
-                    {project.alternativeRoute && (
-                      <div className="mt-2 text-xs text-gray-600 bg-blue-50 rounded px-2 py-1.5">
-                        <strong>Alt route:</strong> {project.alternativeRoute}
-                      </div>
-                    )}
-
-                    {/* Link */}
                     <NavLink
-                      to={`/projects/${project.id}`}
-                      className="mt-2 flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors"
+                      to="/conflicts"
+                      className="block text-orange-700 hover:text-orange-900 font-semibold underline pt-1"
                     >
-                      View project details
-                      <ChevronRight className="w-3 h-3" />
+                      Resolve in Conflict Coordinator →
                     </NavLink>
                   </div>
                 </Popup>
-              </Marker>
+              </Polyline>
             ))}
+
+            {mappableProjects.map((project) => {
+              const conflicts = projectActiveConflicts.get(project.id) || []
+              const hasConflict = conflicts.length > 0
+              const isDelayed = project.status === 'delayed'
+              const digOnce = getDigOnceWarning(project, state.projects)
+
+              // Conflicting projects list
+              const conflictingOtherProjects = conflicts.flatMap((c) =>
+                c.projectIds
+                  .filter((id) => id !== project.id)
+                  .map((id) => state.projects.find((p) => p.id === id))
+                  .filter(Boolean) as Project[]
+              )
+
+              // Compute the highest coordination priority across this project's active conflicts
+              const highestConflictAssessment: ConflictPriorityAssessment | null = conflicts.length > 0
+                ? conflicts.reduce((best, c) => {
+                    const a = calculateConflictPriority(c, state.projects)
+                    if (!best || a.score > best.score) return a
+                    return best
+                  }, null as ConflictPriorityAssessment | null)
+                : null
+
+              return (
+                <Marker
+                  key={project.id}
+                  position={[project.lat!, project.lng!]}
+                  icon={createProjectMarkerIcon(
+                    STATUS_MARKER_COLORS[project.status],
+                    CATEGORY_ICONS[project.category],
+                    hasConflict,
+                    isDelayed
+                  )}
+                  eventHandlers={{
+                    click: () => setActiveProjectId(project.id),
+                  }}
+                >
+                  <Popup minWidth={290} maxWidth={340}>
+                    <div className="font-sans">
+                      {/* Status badge row */}
+                      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                        <span
+                          className={clsx(
+                            'text-xs px-2 py-0.5 rounded-full font-semibold',
+                            STATUS_COLORS[project.status]
+                          )}
+                        >
+                          {STATUS_LABELS[project.status]}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {CATEGORY_ICONS[project.category]} {CATEGORY_LABELS[project.category]}
+                        </span>
+                        {hasConflict && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-orange-100 text-orange-800 border border-orange-300">
+                            ⚠️ Conflict Alert
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <p className="font-bold text-gray-900 text-sm leading-snug mb-2">
+                        {project.title}
+                      </p>
+
+                      {/* Conflict Alert Box in Popup */}
+                      {hasConflict && (
+                        <div className="mb-2 p-2.5 rounded-lg bg-orange-50 border border-orange-200 text-xs text-orange-950 space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-bold text-orange-800">
+                            <AlertTriangle className="w-4 h-4 text-orange-600 shrink-0" />
+                            <span>Active Scheduling Conflict Detected</span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-orange-900">
+                            Road segment <span className="font-mono font-semibold">{project.segmentId}</span> overlaps with:
+                          </p>
+                          <ul className="list-disc pl-4 text-[11px] space-y-0.5 text-orange-950 font-medium">
+                            {conflictingOtherProjects.map((cp) => (
+                              <li key={cp.id}>
+                                {cp.title} <span className="text-gray-500 font-normal">({cp.department})</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {highestConflictAssessment && (
+                            <div className="flex items-center justify-between text-[11px] bg-white/90 dark:bg-gray-800/90 p-1.5 rounded border border-orange-200 dark:border-orange-800">
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">Coordination Urgency:</span>
+                              <span
+                                className={clsx(
+                                  'font-bold px-1.5 py-0.5 rounded font-mono text-[10px]',
+                                  highestConflictAssessment.level === 'High'
+                                    ? 'bg-rose-100 text-rose-800'
+                                    : highestConflictAssessment.level === 'Medium'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-blue-100 text-blue-800'
+                                )}
+                              >
+                                {highestConflictAssessment.level} ({highestConflictAssessment.score}/100)
+                              </span>
+                            </div>
+                          )}
+                          <div className="pt-1 flex items-center justify-between text-[11px]">
+                            <NavLink
+                              to="/conflicts"
+                              className="text-orange-700 hover:text-orange-900 font-semibold underline flex items-center gap-0.5"
+                            >
+                              Simulate & Resolve Schedule →
+                            </NavLink>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dig-Once Policy Advisory in Popup */}
+                      {digOnce.isDigOnceRisk && digOnce.resurfacedProject && (
+                        <div className="mb-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-0.5">
+                          <div className="flex items-center gap-1 font-semibold text-amber-800">
+                            <Shield className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Dig-Once Policy Advisory</span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed">
+                            Road segment was resurfaced {digOnce.daysSinceResurfacing} days ago by {digOnce.resurfacedProject.department}. Repeated excavation requires joint coordination.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Key info */}
+                      <div className="space-y-1 text-xs text-gray-700">
+                        <div className="flex items-start gap-1.5">
+                          <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span>{project.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                          <span>{project.department}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                          <span>
+                            Due: {formatDate(project.revisedEndDate ?? project.plannedEndDate)}
+                            {project.revisedEndDate && (
+                              <span className="ml-1 text-orange-600 font-medium">(revised)</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <span>Progress</span>
+                          <span className="font-medium">{project.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="h-1.5 rounded-full bg-teal-500 transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Alternative route */}
+                      {project.alternativeRoute && (
+                        <div className="mt-2 text-xs text-gray-600 bg-blue-50 rounded px-2 py-1.5">
+                          <strong>Alt route:</strong> {project.alternativeRoute}
+                        </div>
+                      )}
+
+                      {/* Links */}
+                      <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                        <NavLink
+                          to={`/projects/${project.id}`}
+                          className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors"
+                        >
+                          View project details
+                          <ChevronRight className="w-3 h-3" />
+                        </NavLink>
+                        {hasConflict && (
+                          <NavLink
+                            to="/conflicts"
+                            className="text-xs font-semibold text-orange-600 hover:text-orange-800"
+                          >
+                            Conflicts →
+                          </NavLink>
+                        )}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              )
+            })}
           </MapContainer>
         </div>
       </div>
 
       {/* Category legend bar at the bottom */}
       <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-2 transition-colors">
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-600 dark:text-gray-300">
-          {(Object.entries(CATEGORY_ICONS) as [ProjectCategory, string][]).map(([cat, icon]) => (
-            <span key={cat} className="flex items-center gap-1">
-              <span>{icon}</span>
-              {CATEGORY_LABELS[cat]}
+        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-1 text-xs text-gray-600 dark:text-gray-300">
+          <div className="flex flex-wrap gap-x-5 gap-y-1">
+            {(Object.entries(CATEGORY_ICONS) as [ProjectCategory, string][]).map(([cat, icon]) => (
+              <span key={cat} className="flex items-center gap-1">
+                <span>{icon}</span>
+                {CATEGORY_LABELS[cat]}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-0.5 border-t-2 border-dashed border-orange-500 inline-block" />
+              Conflict Corridor
             </span>
-          ))}
+            <span>📍 Approximate Project-Level Coordinates</span>
+          </div>
         </div>
       </div>
     </div>

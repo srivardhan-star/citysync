@@ -677,6 +677,7 @@ export const SEED_NOTIFICATIONS: AppNotification[] = [
 export const SEED_ISSUE_REPORTS: IssueReport[] = [
   {
     id: 'iss-001',
+    referenceNumber: 'CS-2026-KAS821',
     projectId: 'PRJ-003',
     category: 'access_blocked',
     title: 'Driveway completely blocked without temporary ramp — Kasturba Nagar',
@@ -684,11 +685,13 @@ export const SEED_ISSUE_REPORTS: IssueReport[] = [
     locationDetails: 'Kasturba Nagar Main Road, opposite Adyar Supermarket',
     status: 'under_review',
     submittedAt: new Date(daysAgo(3)).toISOString(),
+    updatedAt: new Date(daysAgo(2)).toISOString(),
     reporterName: 'Sunil Verma',
     officialResponse: 'Inspection team dispatched. Steel bridge plates scheduled for installation by contractor within 24 hours.',
   },
   {
     id: 'iss-002',
+    referenceNumber: 'CS-2026-VEL449',
     projectId: 'PRJ-004',
     category: 'safety_hazard',
     title: 'Deep unbarricaded excavation hole near Velachery school crossing',
@@ -696,11 +699,13 @@ export const SEED_ISSUE_REPORTS: IssueReport[] = [
     locationDetails: 'Near Velachery Government School entrance, opposite Vijaya Nagar bus stop',
     status: 'resolved',
     submittedAt: new Date(daysAgo(8)).toISOString(),
+    updatedAt: new Date(daysAgo(7)).toISOString(),
     reporterName: 'Deepa Nair',
     officialResponse: 'Safety barrier and solar caution blinkers installed immediately by Horizon Roadworks on site inspection.',
   },
   {
     id: 'iss-003',
+    referenceNumber: 'CS-2026-MYL105',
     projectId: 'PRJ-008',
     category: 'prolonged_inactivity',
     title: 'No workers on Mylapore Mada Street site for 4 consecutive days',
@@ -708,6 +713,7 @@ export const SEED_ISSUE_REPORTS: IssueReport[] = [
     locationDetails: 'East Mada Street, Mylapore, near Kapaleeshwarar Temple northern gate',
     status: 'open',
     submittedAt: new Date(daysAgo(1)).toISOString(),
+    updatedAt: new Date(daysAgo(1)).toISOString(),
     reporterName: 'Mylapore Merchant Association',
   },
 ];
