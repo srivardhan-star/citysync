@@ -8,36 +8,53 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Deep Purple Brand System
+        brand: {
+          50: '#FAF5FF',
+          100: '#F3E8FF',
+          200: '#E9D5FF',
+          300: '#D8B4FE',
+          400: '#C084FC',
+          500: '#A855F7', // Secondary lavender
+          600: '#9333EA',
+          700: '#7C3AED', // Primary purple
+          800: '#6B21A8',
+          900: '#581C87',
+          950: '#3B0764',
+          primary: '#7C3AED',
+          lavender: '#A855F7',
+          pink: '#F472B6',
+        },
         navy: {
-          50: '#f0f4ff',
-          100: '#dbe4ff',
-          200: '#bac8ff',
-          300: '#91a7ff',
-          400: '#748ffc',
-          500: '#5c7cfa',
-          600: '#4c6ef5',
-          700: '#4263eb',
-          800: '#3b5bdb',
-          900: '#364fc7',
-          950: '#1e2a5e',
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B', // Surface / Card
+          900: '#0F172A', // Main dark background
+          950: '#080D1A',
         },
         civic: {
-          primary: '#1e3a5f',
-          secondary: '#2d5986',
-          accent: '#0ea5e9',
-          teal: '#0d9488',
-          bg: '#f0f4f8',
-          card: '#ffffff',
-          border: '#e2e8f0',
+          primary: '#7C3AED',
+          secondary: '#A855F7',
+          accent: '#F472B6',
+          lavender: '#A855F7',
+          bg: '#0F172A',
+          card: '#1E293B',
+          border: '#334155',
         },
         dark: {
-          bg: '#111827',
-          surface: '#1f2937',
-          elevated: '#27364a',
-          border: '#374151',
-          text: '#f9fafb',
-          muted: '#9ca3af',
-          accent: '#38bdf8',
+          bg: '#0F172A',
+          surface: '#1E293B',
+          elevated: '#273549',
+          border: '#334155',
+          text: '#F8FAFC',
+          muted: '#94A3B8',
+          accent: '#A855F7',
         }
       },
       fontFamily: {
@@ -76,4 +93,3 @@ export default {
   },
   plugins: [],
 }
-

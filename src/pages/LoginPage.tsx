@@ -1,16 +1,14 @@
 // ============================================================
-// CitySync — Government Administration Login Page
+// CitySync — Government Administration Login Page (Deep Purple Rebrand)
 // ============================================================
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Shield,
   Lock,
   User,
   ArrowLeft,
   AlertCircle,
-  CheckCircle2,
   Info,
   Eye,
   EyeOff,
@@ -23,6 +21,7 @@ import {
   validateGovCredentials,
   saveSession,
 } from '../config/authConfig';
+import CitySyncLogo from '../components/CitySyncLogo';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -90,7 +89,7 @@ export default function LoginPage() {
       >
         <button
           onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors p-1"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors p-1"
           aria-label={t('auth.backToHome')}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -106,10 +105,8 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           {/* Card Header & Brand */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-white shadow-xl shadow-blue-600/20 mb-4 border border-blue-400/20">
-              <Shield className="w-7 h-7" />
-            </div>
+          <div className="text-center mb-8 flex flex-col items-center">
+            <CitySyncLogo size="xl" showWordmark={false} theme="dark" className="mb-4" />
             <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--cs-text)' }}>
               {t('auth.cardTitle')}
             </h1>
@@ -126,7 +123,7 @@ export default function LoginPage() {
             {/* Error Message */}
             {errorMessage && (
               <div
-                className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-shake"
+                className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-400 animate-shake"
                 role="alert"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -145,7 +142,7 @@ export default function LoginPage() {
                   {t('auth.usernameLabel')}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -159,7 +156,7 @@ export default function LoginPage() {
                       if (errorMessage) setErrorMessage(null);
                     }}
                     placeholder={t('auth.usernamePlaceholder')}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
                     style={{
                       backgroundColor: 'var(--cs-elevated)',
                       borderColor: 'var(--cs-border)',
@@ -179,7 +176,7 @@ export default function LoginPage() {
                   {t('auth.passwordLabel')}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -193,7 +190,7 @@ export default function LoginPage() {
                       if (errorMessage) setErrorMessage(null);
                     }}
                     placeholder={t('auth.passwordPlaceholder')}
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
                     style={{
                       backgroundColor: 'var(--cs-elevated)',
                       borderColor: 'var(--cs-border)',
@@ -203,7 +200,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-purple-300"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -220,7 +217,7 @@ export default function LoginPage() {
                 type="submit"
                 id="submit-login-btn"
                 disabled={isLoading}
-                className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-blue-700 to-sky-600 hover:from-blue-600 hover:to-sky-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-700/20 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white rounded-xl font-bold text-sm shadow-lg shadow-purple-900/30 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-purple-400/30"
               >
                 {isLoading ? (
                   <>
@@ -241,38 +238,38 @@ export default function LoginPage() {
               <div
                 className="p-3.5 rounded-xl border text-xs"
                 style={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                  borderColor: 'rgba(59, 130, 246, 0.25)',
+                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                  borderColor: 'rgba(168, 85, 247, 0.3)',
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-300">
-                    <Info className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 font-bold text-purple-300">
+                    <Info className="w-4 h-4 text-purple-400" />
                     <span>{t('auth.judgeHintTitle')}</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleFillDemoCredentials}
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+                    className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
                   >
                     Auto-fill
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 font-mono text-[11px] text-gray-700 dark:text-gray-300">
+                <div className="grid grid-cols-2 gap-2 font-mono text-[11px] text-slate-300">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                    <span className="text-slate-400 block text-[10px]">
                       {t('auth.judgeHintUser')}
                     </span>
-                    <strong className="select-all">{DEMO_GOV_CREDENTIALS.username}</strong>
+                    <strong className="select-all text-purple-200">{DEMO_GOV_CREDENTIALS.username}</strong>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                    <span className="text-slate-400 block text-[10px]">
                       {t('auth.judgeHintPass')}
                     </span>
-                    <strong className="select-all">{DEMO_GOV_CREDENTIALS.password}</strong>
+                    <strong className="select-all text-purple-200">{DEMO_GOV_CREDENTIALS.password}</strong>
                   </div>
                 </div>
-                <p className="text-[10px] mt-2 text-gray-500 dark:text-gray-400 leading-normal">
+                <p className="text-[10px] mt-2 text-slate-400 leading-normal">
                   {t('auth.judgeHintNote')}
                 </p>
               </div>

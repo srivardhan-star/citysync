@@ -49,7 +49,7 @@ const CATEGORY_ICONS: Record<ResolutionCategory, React.ReactNode> = {
 };
 
 const CATEGORY_BADGE_COLORS: Record<ResolutionCategory, string> = {
-  sequential_delay:    'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300',
+  sequential_delay:    'bg-purple-500/20 text-purple-200 dark:bg-purple-950/40 dark:text-purple-300',
   joint_excavation:    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
   fast_track:          'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300',
   emergency_reschedule:'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300',
@@ -58,7 +58,7 @@ const CATEGORY_BADGE_COLORS: Record<ResolutionCategory, string> = {
 };
 
 const CATEGORY_BORDER_COLORS: Record<ResolutionCategory, string> = {
-  sequential_delay:    'border-blue-200 dark:border-blue-800',
+  sequential_delay:    'border-purple-500/30 dark:border-purple-500/30',
   joint_excavation:    'border-emerald-200 dark:border-emerald-800',
   fast_track:          'border-amber-200 dark:border-amber-800',
   emergency_reschedule:'border-red-200 dark:border-red-800',
@@ -67,7 +67,7 @@ const CATEGORY_BORDER_COLORS: Record<ResolutionCategory, string> = {
 };
 
 const CATEGORY_LEFT_COLORS: Record<ResolutionCategory, string> = {
-  sequential_delay:    'bg-blue-500',
+  sequential_delay:    'bg-[#7C3AED]',
   joint_excavation:    'bg-emerald-500',
   fast_track:          'bg-amber-500',
   emergency_reschedule:'bg-red-500',
@@ -144,7 +144,7 @@ function LedgerEntryCard({
         </div>
 
         {/* Public citizen explanation — always visible, no jargon */}
-        <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 rounded-lg p-3.5 text-xs text-teal-900 dark:text-teal-200 leading-relaxed">
+        <div className="bg-purple-950/20 dark:bg-purple-950/30 border border-purple-500/30 dark:border-purple-500/30 rounded-lg p-3.5 text-xs text-purple-100 dark:text-purple-200 leading-relaxed">
           <div className="flex items-start gap-2">
             <Eye className="w-4 h-4 text-teal-600 dark:text-teal-400 mt-0.5 shrink-0" />
             <div>
@@ -167,7 +167,7 @@ function LedgerEntryCard({
                 </div>
                 <NavLink
                   to={`/projects/${proj.projectId}`}
-                  className="shrink-0 text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                  className="shrink-0 text-purple-400 dark:text-purple-300 hover:underline flex items-center gap-0.5"
                 >
                   View <ChevronRight className="w-3 h-3" />
                 </NavLink>
@@ -218,7 +218,7 @@ function LedgerEntryCard({
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 mt-1"
+          className="text-xs text-purple-400 dark:text-purple-300 hover:underline flex items-center gap-1 mt-1"
         >
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           {expanded ? 'Hide details' : (isGovernment ? 'Show coordinator details' : 'Show decision details')}
@@ -358,7 +358,7 @@ export default function AccountabilityLedger() {
       <div className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center shadow-md">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
@@ -379,12 +379,12 @@ export default function AccountabilityLedger() {
 
         {/* Role-specific info banner */}
         {isGovernment ? (
-          <div className="mt-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-lg px-4 py-2.5 text-xs text-blue-800 dark:text-blue-200 flex items-center gap-2">
-            <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <div className="mt-3 bg-purple-950/20 dark:bg-purple-950/30 border border-purple-500/30 dark:border-purple-500/30 rounded-lg px-4 py-2.5 text-xs text-purple-200 dark:text-purple-200 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-purple-400 dark:text-purple-300 shrink-0" />
             Government view: Coordinator justifications, technical details, and decision attribution visible below each entry.
           </div>
         ) : (
-          <div className="mt-3 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 rounded-lg px-4 py-2.5 text-xs text-teal-800 dark:text-teal-200 flex items-center gap-2">
+          <div className="mt-3 bg-purple-950/20 dark:bg-purple-950/30 border border-purple-500/30 dark:border-purple-500/30 rounded-lg px-4 py-2.5 text-xs text-purple-200 dark:text-purple-200 flex items-center gap-2">
             <Eye className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
             Public view: Each entry explains what changed, which road was affected, and why the rescheduling was necessary.
           </div>
@@ -398,16 +398,16 @@ export default function AccountabilityLedger() {
             label: 'Total Decisions',
             value: stats.total,
             color: 'text-teal-700 dark:text-teal-300',
-            bg: 'bg-teal-50 dark:bg-teal-950/40',
-            border: 'border-teal-200 dark:border-teal-800',
+            bg: 'bg-purple-950/20 dark:bg-purple-950/40',
+            border: 'border-purple-500/30 dark:border-teal-800',
             icon: <BookOpen className="w-4 h-4" />,
           },
           {
             label: 'This Month',
             value: stats.thisMonth,
-            color: 'text-blue-700 dark:text-blue-300',
-            bg: 'bg-blue-50 dark:bg-blue-950/40',
-            border: 'border-blue-200 dark:border-blue-800',
+            color: 'text-blue-700 dark:text-purple-300',
+            bg: 'bg-purple-950/20 dark:bg-purple-950/40',
+            border: 'border-purple-500/30 dark:border-purple-500/30',
             icon: <Calendar className="w-4 h-4" />,
           },
           {
@@ -468,7 +468,7 @@ export default function AccountabilityLedger() {
               onClick={() => setCategoryFilter(cat)}
               className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
                 categoryFilter === cat
-                  ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                  ? 'bg-[#7C3AED] text-white border-purple-600 shadow-sm'
                   : 'bg-white dark:bg-gray-750 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
@@ -574,13 +574,13 @@ export default function AccountabilityLedger() {
 
       {/* Connect to conflict detection */}
       {ledgerEntries.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl p-5 text-sm flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+        <div className="bg-purple-950/20 dark:bg-purple-950/30 border border-purple-500/30 dark:border-purple-500/30 rounded-xl p-5 text-sm flex items-start gap-3">
+          <Info className="w-5 h-5 text-purple-400 dark:text-purple-300 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <div className="font-semibold text-blue-900 dark:text-blue-200">
+            <div className="font-semibold text-blue-900 dark:text-purple-200">
               How decisions appear here
             </div>
-            <div className="text-blue-700 dark:text-blue-300 text-xs leading-relaxed">
+            <div className="text-blue-700 dark:text-purple-300 text-xs leading-relaxed">
               Every confirmed scheduling change from the{' '}
               <NavLink to="/conflicts" className="font-medium hover:underline">
                 Conflict Detection & Coordination

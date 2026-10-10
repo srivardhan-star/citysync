@@ -142,7 +142,7 @@ export default function ChennaiMap() {
       <div className="flex-shrink-0 px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-600 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-[#7C3AED] rounded-lg flex items-center justify-center">
               <Map className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -159,7 +159,7 @@ export default function ChennaiMap() {
               className={clsx(
                 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors',
                 showList
-                  ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-300 dark:border-teal-750 text-teal-700 dark:text-teal-300'
+                  ? 'bg-purple-950/20 dark:bg-purple-950/40 border-purple-500/40 dark:border-purple-500/40 text-purple-300 dark:text-purple-300'
                   : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
               )}
             >
@@ -270,7 +270,7 @@ export default function ChennaiMap() {
                   onClick={() => handleListClick(project)}
                   className={clsx(
                     'w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-colors',
-                    activeProjectId === project.id && 'bg-teal-50 dark:bg-teal-950/40 border-l-4 border-teal-500'
+                    activeProjectId === project.id && 'bg-purple-950/20 dark:bg-purple-950/40 border-l-4 border-purple-500'
                   )}
                 >
                   <div className="flex items-start gap-2">
@@ -393,7 +393,7 @@ export default function ChennaiMap() {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
                         <div
-                          className="h-1.5 rounded-full bg-teal-500 transition-all"
+                          className="h-1.5 rounded-full bg-[#7C3AED] transition-all"
                           style={{ width: `${project.progress}%` }}
                         />
                       </div>
@@ -401,7 +401,7 @@ export default function ChennaiMap() {
 
                     {/* Alternative route */}
                     {project.alternativeRoute && (
-                      <div className="mt-2 text-xs text-gray-600 bg-blue-50 rounded px-2 py-1.5">
+                      <div className="mt-2 text-xs text-gray-300 bg-purple-950/40 border border-purple-500/30 rounded px-2 py-1.5">
                         <strong>Alt route:</strong> {project.alternativeRoute}
                       </div>
                     )}

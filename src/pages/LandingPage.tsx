@@ -1,26 +1,21 @@
 // ============================================================
-// CitySync — Modern Civic-Tech Landing Page
+// CitySync — Modern Civic-Tech Landing Page (Deep Purple Rebrand)
 // ============================================================
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Shield,
   ArrowRight,
   Lock,
   MapPin,
   AlertTriangle,
   Users,
   BarChart3,
-  CheckCircle2,
-  ExternalLink,
-  Building2,
-  Calendar,
-  Layers,
 } from 'lucide-react';
 import { useTranslation, LanguageSelector } from '../context/LanguageContext';
 import { useApp } from '../context/AppContext';
 import { LANDING_PAGE_CONFIG } from '../config/landingConfig';
+import CitySyncLogo from '../components/CitySyncLogo';
 
 export default function LandingPage() {
   const { t } = useTranslation();
@@ -40,7 +35,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col text-slate-100 overflow-x-hidden selection:bg-blue-500 selection:text-white">
+    <div className="relative min-h-screen flex flex-col text-slate-100 overflow-x-hidden selection:bg-purple-600 selection:text-white">
       {/* ── Background with Customizable Config & Gradient Fallback ── */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-700 pointer-events-none"
@@ -63,32 +58,29 @@ export default function LandingPage() {
             onError={() => setBgFailed(true)}
           />
         )}
-        {/* Darkening & Color Gradient Overlays for optimal civic-tech contrast */}
+        {/* Darkening & Deep Purple / Navy Gradient Overlays for optimal contrast */}
         <div
-          className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px]"
+          className="absolute inset-0 bg-[#0F172A]/85 backdrop-blur-[2px]"
           style={{ opacity: LANDING_PAGE_CONFIG.overlayOpacity }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-blue-950/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/75 to-[#2E1065]/35" />
+        {/* Subtle purple ambient lighting highlight */}
+        <div className="absolute -top-32 left-1/3 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* ── Header ── */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/10">
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-purple-500/20">
         {/* CitySync Wordmark & Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-sky-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/15">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="font-extrabold text-xl tracking-tight text-white flex items-center gap-2">
-              {LANDING_PAGE_CONFIG.appName}
-              <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                {LANDING_PAGE_CONFIG.locationBadge}
-              </span>
-            </div>
-            <p className="text-xs text-blue-200/80 font-medium">
-              {t('app.portalSub')}
-            </p>
-          </div>
+          <CitySyncLogo
+            size="md"
+            showWordmark={true}
+            theme="dark"
+            subtitle={t('app.portalSub')}
+          />
+          <span className="hidden sm:inline-block ml-2 px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            {LANDING_PAGE_CONFIG.locationBadge}
+          </span>
         </div>
 
         {/* Header Right: Language Selector & Login Shortcut */}
@@ -96,10 +88,10 @@ export default function LandingPage() {
           <LanguageSelector variant="landing" />
           <button
             onClick={handleGovLogin}
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white/10 hover:bg-white/20 text-blue-200 hover:text-white transition-all border border-white/10 active:scale-95"
+            className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 hover:text-white transition-all border border-purple-500/30 active:scale-95 shadow-sm"
             aria-label={t('landing.btnGovLogin')}
           >
-            <Lock className="w-3.5 h-3.5 text-blue-400" />
+            <Lock className="w-3.5 h-3.5 text-purple-400" />
             <span>{t('landing.btnGovLogin')}</span>
           </button>
         </div>
@@ -109,18 +101,18 @@ export default function LandingPage() {
       <main className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="max-w-3xl">
           {/* Civic Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 border border-blue-400/30 text-blue-300 mb-6 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-400/30 text-purple-200 mb-6 backdrop-blur-md shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>{t('landing.heroBadge')}</span>
           </div>
 
           {/* Heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#F8FAFC] tracking-tight leading-[1.15] mb-4">
             {t('landing.heroTitle')}
           </h1>
 
           {/* Tagline */}
-          <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-300 via-sky-200 to-indigo-200 bg-clip-text text-transparent mb-4">
+          <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-300 via-purple-200 to-pink-300 bg-clip-text text-transparent mb-4">
             "{t('app.tagline')}"
           </p>
 
@@ -135,14 +127,14 @@ export default function LandingPage() {
             <button
               id="continue-to-dashboard-btn"
               onClick={handleContinueToDashboard}
-              className="group relative flex-1 sm:flex-initial flex items-center justify-between sm:justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white rounded-xl font-bold text-base shadow-xl shadow-blue-900/30 hover:shadow-blue-700/40 transition-all transform hover:-translate-y-0.5 active:scale-95 border border-sky-400/30"
+              className="group relative flex-1 sm:flex-initial flex items-center justify-between sm:justify-center gap-3 px-7 py-4 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white rounded-xl font-bold text-base shadow-xl shadow-purple-950/50 hover:shadow-purple-900/60 transition-all transform hover:-translate-y-0.5 active:scale-95 border border-purple-400/30"
             >
               <div className="flex flex-col text-left">
                 <span className="leading-tight flex items-center gap-2">
                   {t('landing.btnDashboard')}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 text-pink-300" />
                 </span>
-                <span className="text-[11px] font-normal text-sky-100/90 mt-0.5">
+                <span className="text-[11px] font-normal text-purple-100/90 mt-0.5">
                   {t('landing.btnDashboardSub')}
                 </span>
               </div>
@@ -152,10 +144,10 @@ export default function LandingPage() {
             <button
               id="government-login-btn"
               onClick={handleGovLogin}
-              className="flex-1 sm:flex-initial flex items-center justify-between sm:justify-center gap-3 px-6 py-4 bg-slate-900/90 hover:bg-slate-800 text-white rounded-xl font-bold text-base shadow-lg transition-all border border-slate-700/80 hover:border-slate-600 transform hover:-translate-y-0.5 active:scale-95"
+              className="flex-1 sm:flex-initial flex items-center justify-between sm:justify-center gap-3 px-6 py-4 bg-[#1E293B]/90 hover:bg-[#273549] text-white rounded-xl font-bold text-base shadow-lg transition-all border border-purple-500/20 hover:border-purple-400/40 transform hover:-translate-y-0.5 active:scale-95"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center flex-shrink-0 text-blue-300">
+                <div className="w-9 h-9 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center flex-shrink-0 text-purple-300">
                   <Lock className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col text-left">
@@ -171,20 +163,20 @@ export default function LandingPage() {
           </div>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-white/10">
-            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/5">
-              <div className="text-xl font-extrabold text-sky-300">12</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-purple-500/20">
+            <div className="px-3.5 py-2.5 rounded-xl bg-purple-950/30 border border-purple-500/20">
+              <div className="text-xl font-extrabold text-purple-300">12</div>
               <div className="text-xs text-slate-400">{t('landing.statProjects')}</div>
             </div>
-            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/5">
-              <div className="text-xl font-extrabold text-blue-300">11</div>
+            <div className="px-3.5 py-2.5 rounded-xl bg-purple-950/30 border border-purple-500/20">
+              <div className="text-xl font-extrabold text-pink-300">11</div>
               <div className="text-xs text-slate-400">{t('landing.statNeighborhoods')}</div>
             </div>
-            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/5">
-              <div className="text-xl font-extrabold text-indigo-300">7+</div>
+            <div className="px-3.5 py-2.5 rounded-xl bg-purple-950/30 border border-purple-500/20">
+              <div className="text-xl font-extrabold text-purple-200">7+</div>
               <div className="text-xs text-slate-400">{t('landing.statCoordination')}</div>
             </div>
-            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/5">
+            <div className="px-3.5 py-2.5 rounded-xl bg-purple-950/30 border border-purple-500/20">
               <div className="text-xl font-extrabold text-emerald-300">100%</div>
               <div className="text-xs text-slate-400">{t('landing.statCitizensSub')}</div>
             </div>
@@ -192,7 +184,7 @@ export default function LandingPage() {
         </div>
 
         {/* ── Key Feature Cards Section ── */}
-        <div className="mt-16 pt-12 border-t border-white/10">
+        <div className="mt-16 pt-12 border-t border-purple-500/20">
           <div className="mb-8">
             <h2 className="text-2xl font-extrabold text-white">
               {t('landing.featuresTitle')}
@@ -204,8 +196,8 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Feature 1 */}
-            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md hover:border-slate-700 transition-all hover:-translate-y-1">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 border border-blue-500/30">
+            <div className="p-5 rounded-2xl bg-[#1E293B]/70 border border-purple-500/20 backdrop-blur-md hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-4 border border-purple-500/30">
                 <MapPin className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base mb-2">
@@ -217,8 +209,8 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 2 */}
-            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md hover:border-slate-700 transition-all hover:-translate-y-1">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 border border-amber-500/30">
+            <div className="p-5 rounded-2xl bg-[#1E293B]/70 border border-purple-500/20 backdrop-blur-md hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center mb-4 border border-amber-500/30">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base mb-2">
@@ -230,8 +222,8 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 3 */}
-            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md hover:border-slate-700 transition-all hover:-translate-y-1">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/30">
+            <div className="p-5 rounded-2xl bg-[#1E293B]/70 border border-purple-500/20 backdrop-blur-md hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-pink-500/20 text-pink-300 flex items-center justify-center mb-4 border border-pink-500/30">
                 <Users className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base mb-2">
@@ -243,8 +235,8 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 4 */}
-            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md hover:border-slate-700 transition-all hover:-translate-y-1">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4 border border-purple-500/30">
+            <div className="p-5 rounded-2xl bg-[#1E293B]/70 border border-purple-500/20 backdrop-blur-md hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-4 border border-purple-500/30">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base mb-2">
@@ -259,21 +251,24 @@ export default function LandingPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-        <div>{t('landing.footerText')}</div>
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div className="flex items-center gap-3">
+          <CitySyncLogo size="sm" showWordmark={true} theme="dark" />
+          <span>· {t('landing.footerText')}</span>
+        </div>
         <div className="flex items-center gap-4">
-          <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">
+          <span className="px-2.5 py-0.5 rounded-lg bg-purple-950/60 border border-purple-500/30 text-purple-300 text-[11px] font-medium">
             {t('landing.demoBadge')}
           </span>
           <button
             onClick={handleContinueToDashboard}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-purple-300 hover:text-white transition-colors"
           >
             {t('landing.btnDashboard')}
           </button>
           <button
             onClick={handleGovLogin}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-purple-300 hover:text-white transition-colors"
           >
             {t('landing.btnGovLogin')}
           </button>

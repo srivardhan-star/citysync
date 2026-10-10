@@ -1,5 +1,5 @@
 // ============================================================
-// CivicTrack — Public Feedback & Accountability Page
+// CitySync — Public Feedback & Accountability Page
 // ============================================================
 
 import { useState, useMemo } from 'react';
@@ -284,12 +284,12 @@ export default function PublicFeedback() {
       {/* Status Legend */}
       <div className="card p-5 bg-gradient-to-r from-gray-50 to-blue-50/40 dark:from-gray-800 dark:to-blue-950/20 border border-blue-100 dark:border-blue-900/40">
         <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <HelpCircle className="w-4 h-4 text-purple-400 dark:text-blue-400" />
           Project Status Legend & Meaning
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
           <div className="bg-white dark:bg-gray-750 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
-            <span className="badge bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-semibold">Planned</span>
+            <span className="badge bg-purple-500/20 dark:bg-purple-950/50 text-purple-200 dark:text-purple-300 font-semibold">Planned</span>
             <p className="text-gray-600 dark:text-gray-300 mt-1.5 leading-relaxed text-[11px]">
               Approved and scheduled. Excavation has not yet commenced.
             </p>
@@ -324,7 +324,7 @@ export default function PublicFeedback() {
       {/* Accountability Summary Statistics */}
       <div>
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <TrendingUp className="w-5 h-5 text-purple-400 dark:text-blue-400" />
           Contractor & Department Accountability Scorecard
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -357,7 +357,7 @@ export default function PublicFeedback() {
 
           <div className="card p-4">
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Citizen Satisfaction</div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1.5">
+            <div className="text-2xl font-bold text-purple-400 dark:text-blue-400 mt-1 flex items-center gap-1.5">
               {metrics.avgRating}
               <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
             </div>
@@ -409,7 +409,7 @@ export default function PublicFeedback() {
                 onClick={() => setFilterType('active')}
                 className={`px-3 py-1 rounded-lg transition ${
                   filterType === 'active'
-                    ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-400 shadow-sm font-semibold'
+                    ? 'bg-white dark:bg-gray-700 text-purple-300 dark:text-blue-400 shadow-sm font-semibold'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
@@ -471,7 +471,7 @@ export default function PublicFeedback() {
                         {p.location}, {p.neighborhood}
                       </span>
                       <span className="flex items-center gap-1.5 font-medium text-gray-800 dark:text-gray-200">
-                        <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <Calendar className="w-3.5 h-3.5 text-purple-400 dark:text-blue-400" />
                         Promised: {formatDate(p.plannedEndDate)}
                       </span>
                     </div>
@@ -484,7 +484,7 @@ export default function PublicFeedback() {
                       </div>
                       <div className="w-24 bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden mt-1">
                         <div
-                          className="bg-blue-600 dark:bg-blue-500 h-full rounded-full"
+                          className="bg-[#7C3AED] dark:bg-[#7C3AED] h-full rounded-full"
                           style={{ width: `${p.progress}%` }}
                         />
                       </div>
@@ -542,11 +542,11 @@ export default function PublicFeedback() {
                         </div>
 
                         <div>
-                          <strong className="text-teal-900 dark:text-teal-200 flex items-center gap-1 font-semibold mb-0.5">
+                          <strong className="text-purple-100 dark:text-purple-200 flex items-center gap-1 font-semibold mb-0.5">
                             <Navigation className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                             Alternative Route / Detour Guidance:
                           </strong>
-                          <p className="text-teal-800 dark:text-teal-200 bg-teal-50/70 dark:bg-teal-950/40 p-3 rounded-lg border border-teal-200 dark:border-teal-800/80 leading-relaxed">
+                          <p className="text-purple-200 dark:text-purple-200 bg-purple-950/20 dark:bg-purple-950/30 p-3 rounded-lg border border-purple-500/30 dark:border-purple-500/40 leading-relaxed">
                             {p.alternativeRoute || 'No special detours posted. Follow traffic signs.'}
                           </p>
                         </div>
@@ -854,7 +854,7 @@ export default function PublicFeedback() {
                           <span>Project: </span>
                           <NavLink
                             to={`/projects/${targetProj.id}`}
-                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                            className="text-purple-400 dark:text-blue-400 hover:underline font-medium"
                           >
                             {targetProj.title}
                           </NavLink>
@@ -1021,7 +1021,7 @@ export default function PublicFeedback() {
                   const targetProj = projects.find((p) => p.id === iss.projectId);
                   const statusConfig = {
                     open: { label: 'Open', color: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-                    under_review: { label: 'Under Municipal Review', color: 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+                    under_review: { label: 'Under Municipal Review', color: 'bg-purple-500/20 dark:bg-purple-950/50 text-purple-200 dark:text-purple-300 border-purple-500/30 dark:border-purple-500/40' },
                     resolved: { label: 'Resolved', color: 'bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800' },
                   }[iss.status];
 
@@ -1047,7 +1047,7 @@ export default function PublicFeedback() {
                         {targetProj && (
                           <NavLink
                             to={`/projects/${targetProj.id}`}
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-medium"
+                            className="text-purple-400 dark:text-blue-400 hover:underline text-[11px] font-medium"
                           >
                             {targetProj.title} →
                           </NavLink>
@@ -1059,8 +1059,8 @@ export default function PublicFeedback() {
                       </p>
 
                       {iss.officialResponse && (
-                        <div className="bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-200 p-3 rounded-lg text-xs">
-                          <strong className="text-teal-800 dark:text-teal-300 font-semibold block mb-0.5">Official Response:</strong>
+                        <div className="bg-purple-950/20 dark:bg-purple-950/40 border border-purple-500/30 dark:border-purple-500/30 text-purple-100 dark:text-purple-200 p-3 rounded-lg text-xs">
+                          <strong className="text-purple-200 dark:text-teal-300 font-semibold block mb-0.5">Official Response:</strong>
                           {iss.officialResponse}
                         </div>
                       )}
@@ -1073,7 +1073,7 @@ export default function PublicFeedback() {
                             {iss.status !== 'under_review' && (
                               <button
                                 onClick={() => updateIssueReportStatus(iss.id, 'under_review')}
-                                className="px-2.5 py-1 text-[11px] rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 font-medium border border-blue-200 dark:border-blue-800 transition"
+                                className="px-2.5 py-1 text-[11px] rounded bg-purple-950/20 dark:bg-purple-950/50 text-purple-300 dark:text-purple-300 hover:bg-purple-500/20 dark:hover:bg-purple-900/40 font-medium border border-purple-500/30 dark:border-purple-500/40 transition"
                               >
                                 Mark Under Review
                               </button>

@@ -176,7 +176,7 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  planned: 'bg-blue-100 text-blue-800',
+  planned: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
   ongoing: 'bg-amber-100 text-amber-800',
   delayed: 'bg-red-100 text-red-800',
   completed: 'bg-green-100 text-green-800',

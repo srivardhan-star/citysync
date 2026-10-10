@@ -188,11 +188,11 @@ function WhatIfSimulatorPanel({
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border-2 border-blue-400/80 dark:border-blue-600/80 rounded-2xl p-5 space-y-5 animate-fade-in">
+    <div className="bg-gradient-to-b from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border-2 border-purple-400/80 dark:border-purple-600/80 rounded-2xl p-5 space-y-5 animate-fade-in">
       {/* Sandbox Header Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 dark:border-blue-800/60 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/30 dark:border-purple-500/30/60 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-[#7C3AED] text-white flex items-center justify-center shadow-sm">
             <SlidersHorizontal className="w-4 h-4" />
           </div>
           <div>
@@ -236,7 +236,7 @@ function WhatIfSimulatorPanel({
               }}
               className={`p-3 rounded-xl border text-left transition-all ${
                 selectedProjectId === projectA.id
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300 dark:ring-blue-800'
+                  ? 'bg-[#7C3AED] text-white border-purple-600 shadow-md ring-2 ring-purple-400 dark:ring-purple-800'
                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-300'
               }`}
             >
@@ -244,7 +244,7 @@ function WhatIfSimulatorPanel({
               <div className={`text-[11px] mt-0.5 ${selectedProjectId === projectA.id ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
                 {projectA.department} · {CATEGORY_LABELS[projectA.category]}
               </div>
-              <div className={`mt-2 font-mono text-[11px] pt-1.5 border-t ${selectedProjectId === projectA.id ? 'border-blue-500/50 text-blue-100' : 'border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
+              <div className={`mt-2 font-mono text-[11px] pt-1.5 border-t ${selectedProjectId === projectA.id ? 'border-purple-500/50 text-blue-100' : 'border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
                 Baseline: {formatDate(projectA.startDate)} → {formatDate(projectA.revisedEndDate || projectA.plannedEndDate)}
               </div>
             </button>
@@ -261,20 +261,20 @@ function WhatIfSimulatorPanel({
               }}
               className={`p-3 rounded-xl border text-left transition-all ${
                 selectedProjectId === projectB.id
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300 dark:ring-blue-800'
+                  ? 'bg-[#7C3AED] text-white border-purple-600 shadow-md ring-2 ring-purple-400 dark:ring-purple-800'
                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-300'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold truncate">{projectB.title}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${selectedProjectId === projectB.id ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${selectedProjectId === projectB.id ? 'bg-[#7C3AED] text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                   Recommended Lever
                 </span>
               </div>
               <div className={`text-[11px] mt-0.5 ${selectedProjectId === projectB.id ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
                 {projectB.department} · {CATEGORY_LABELS[projectB.category]}
               </div>
-              <div className={`mt-2 font-mono text-[11px] pt-1.5 border-t ${selectedProjectId === projectB.id ? 'border-blue-500/50 text-blue-100' : 'border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
+              <div className={`mt-2 font-mono text-[11px] pt-1.5 border-t ${selectedProjectId === projectB.id ? 'border-purple-500/50 text-blue-100' : 'border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
                 Baseline: {formatDate(projectB.startDate)} → {formatDate(projectB.revisedEndDate || projectB.plannedEndDate)}
               </div>
             </button>
@@ -296,7 +296,7 @@ function WhatIfSimulatorPanel({
             onClick={() => handlePresetClick(0)}
             className={`px-3 py-1.5 rounded-lg border font-medium transition ${
               dayOffset === 0 && customStartDate === null
-                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-400 font-bold'
+                ? 'bg-purple-500/20 dark:bg-purple-900/40 text-purple-200 dark:text-purple-100 border-purple-400 font-bold'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -307,7 +307,7 @@ function WhatIfSimulatorPanel({
             onClick={() => handlePresetClick(14)}
             className={`px-3 py-1.5 rounded-lg border font-medium transition ${
               dayOffset === 14 && customStartDate === null
-                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-400 font-bold'
+                ? 'bg-purple-500/20 dark:bg-purple-900/40 text-purple-200 dark:text-purple-100 border-purple-400 font-bold'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -318,7 +318,7 @@ function WhatIfSimulatorPanel({
             onClick={() => handlePresetClick(26)}
             className={`px-3 py-1.5 rounded-lg border font-medium transition ${
               dayOffset === 26 && customStartDate === null
-                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-400 font-bold'
+                ? 'bg-purple-500/20 dark:bg-purple-900/40 text-purple-200 dark:text-purple-100 border-purple-400 font-bold'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -329,7 +329,7 @@ function WhatIfSimulatorPanel({
             onClick={() => handlePresetClick(-10)}
             className={`px-3 py-1.5 rounded-lg border font-medium transition ${
               dayOffset === -10 && customStartDate === null
-                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-400 font-bold'
+                ? 'bg-purple-500/20 dark:bg-purple-900/40 text-purple-200 dark:text-purple-100 border-purple-400 font-bold'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -358,7 +358,7 @@ function WhatIfSimulatorPanel({
             <span className="font-semibold text-gray-700 dark:text-gray-200">
               Interactive Date Offset Slider:
             </span>
-            <span className="font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold text-xs">
+            <span className="font-mono px-2 py-0.5 rounded bg-purple-950/20 dark:bg-blue-950 text-purple-300 dark:text-purple-200 font-bold text-xs">
               {dayOffset >= 0 ? `+${dayOffset}` : dayOffset} Days Shift
             </span>
           </div>
@@ -635,8 +635,8 @@ export default function ConflictDetection() {
     <div className="p-4 lg:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Toast notification */}
       {successToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-teal-900 text-white px-5 py-3.5 rounded-xl shadow-xl flex items-center gap-3 border border-teal-700 animate-slide-up">
-          <CheckCheck className="w-5 h-5 text-teal-300" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#1E293B] text-white px-5 py-3.5 rounded-xl shadow-xl flex items-center gap-3 border border-purple-500/40 animate-slide-up">
+          <CheckCheck className="w-5 h-5 text-purple-300" />
           <span className="text-sm font-medium">{successToast}</span>
         </div>
       )}
@@ -645,7 +645,7 @@ export default function ConflictDetection() {
       <div>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold text-xs uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-purple-400 dark:text-purple-300 font-semibold text-xs uppercase tracking-wider mb-1">
               <Zap className="w-4 h-4" />
               Automated Coordination Engine
             </div>
@@ -659,7 +659,7 @@ export default function ConflictDetection() {
 
           <div className="flex items-center gap-3">
             {isGovernment ? (
-              <span className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
+              <span className="text-xs bg-purple-950/20 dark:bg-purple-950/50 text-purple-300 dark:text-purple-200 border border-purple-500/30 dark:border-purple-500/30 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5" />
                 Government Mode · Actionable Sequencing
               </span>
@@ -690,9 +690,9 @@ export default function ConflictDetection() {
           <div>
             <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Resolved Conflicts</div>
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.resolved}</div>
-            <div className="text-xs text-teal-600 dark:text-teal-400 mt-0.5 font-medium">Schedules re-aligned</div>
+            <div className="text-xs text-purple-400 dark:text-purple-400 mt-0.5 font-medium">Schedules re-aligned</div>
           </div>
-          <div className="w-12 h-12 bg-teal-100 dark:bg-teal-950/60 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400">
+          <div className="w-12 h-12 bg-purple-500/20 dark:bg-purple-950/40 rounded-xl flex items-center justify-center text-purple-400 dark:text-purple-400">
             <CheckCircle2 className="w-6 h-6" />
           </div>
         </div>
@@ -701,9 +701,9 @@ export default function ConflictDetection() {
           <div>
             <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Detected</div>
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.total}</div>
-            <div className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 font-medium">Across active segments</div>
+            <div className="text-xs text-purple-400 dark:text-purple-300 mt-0.5 font-medium">Across active segments</div>
           </div>
-          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950/60 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+          <div className="w-12 h-12 bg-purple-500/20 dark:bg-purple-950/50 rounded-xl flex items-center justify-center text-purple-400 dark:text-purple-300">
             <Layers className="w-6 h-6" />
           </div>
         </div>
@@ -715,7 +715,7 @@ export default function ConflictDetection() {
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="p-1.5 bg-blue-500/20 rounded-lg text-blue-300">
+              <span className="p-1.5 bg-[#7C3AED]/20 rounded-lg text-purple-200">
                 <Sparkles className="w-5 h-5" />
               </span>
               <h2 className="text-lg font-bold">Transparent Priority Resolution Formula</h2>
@@ -725,41 +725,41 @@ export default function ConflictDetection() {
             </span>
           </div>
 
-          <p className="text-sm text-blue-200/90 leading-relaxed max-w-4xl">
-            When multiple departments contend for the same infrastructure segment, CivicTrack computes a weighted priority index to objectively recommend which project proceeds first or retains its window. Urgent life-safety emergencies invoke an override.
+          <p className="text-sm text-purple-100/90 leading-relaxed max-w-4xl">
+            When multiple departments contend for the same infrastructure segment, CitySync computes a weighted priority index to objectively recommend which project proceeds first or retains its window. Urgent life-safety emergencies invoke an override.
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
             <div className="bg-white/10 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-              <div className="text-blue-300 text-xs font-semibold uppercase">Public Safety</div>
+              <div className="text-purple-200 text-xs font-semibold uppercase">Public Safety</div>
               <div className="text-xl font-black mt-1">30%</div>
-              <div className="text-[11px] text-blue-200/70 mt-0.5">Physical hazard mitigation</div>
+              <div className="text-[11px] text-purple-100/70 mt-0.5">Physical hazard mitigation</div>
             </div>
             <div className="bg-white/10 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-              <div className="text-blue-300 text-xs font-semibold uppercase">Essential Service</div>
+              <div className="text-purple-200 text-xs font-semibold uppercase">Essential Service</div>
               <div className="text-xl font-black mt-1">25%</div>
-              <div className="text-[11px] text-blue-200/70 mt-0.5">Water, power, hospitals</div>
+              <div className="text-[11px] text-purple-100/70 mt-0.5">Water, power, hospitals</div>
             </div>
             <div className="bg-white/10 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-              <div className="text-blue-300 text-xs font-semibold uppercase">Dependency Impact</div>
+              <div className="text-purple-200 text-xs font-semibold uppercase">Dependency Impact</div>
               <div className="text-xl font-black mt-1">20%</div>
-              <div className="text-[11px] text-blue-200/70 mt-0.5">Downstream project blocks</div>
+              <div className="text-[11px] text-purple-100/70 mt-0.5">Downstream project blocks</div>
             </div>
             <div className="bg-white/10 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-              <div className="text-blue-300 text-xs font-semibold uppercase">Urgency</div>
+              <div className="text-purple-200 text-xs font-semibold uppercase">Urgency</div>
               <div className="text-xl font-black mt-1">15%</div>
-              <div className="text-[11px] text-blue-200/70 mt-0.5">Deadline/monsoon pressure</div>
+              <div className="text-[11px] text-purple-100/70 mt-0.5">Deadline/monsoon pressure</div>
             </div>
             <div className="bg-white/10 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-              <div className="text-blue-300 text-xs font-semibold uppercase">Public Disruption</div>
+              <div className="text-purple-200 text-xs font-semibold uppercase">Public Disruption</div>
               <div className="text-xl font-black mt-1">10%</div>
-              <div className="text-[11px] text-blue-200/70 mt-0.5">Commute detour impact</div>
+              <div className="text-[11px] text-purple-100/70 mt-0.5">Commute detour impact</div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between text-xs text-blue-200/80 pt-2 border-t border-white/10 gap-2">
+          <div className="flex flex-wrap items-center justify-between text-xs text-purple-100/80 pt-2 border-t border-white/10 gap-2">
             <div>
-              <span className="font-mono bg-black/30 px-2 py-1 rounded text-blue-300">
+              <span className="font-mono bg-black/30 px-2 py-1 rounded text-purple-200">
                 Score = (30×Safety + 25×Essential + 20×Dep + 15×Urg + 10×Disruption) / 5
               </span>
             </div>
@@ -807,7 +807,7 @@ export default function ConflictDetection() {
               onClick={() => setFilterMode('resolved')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 filterMode === 'resolved'
-                  ? 'bg-white dark:bg-gray-700 text-teal-700 dark:text-teal-400 shadow-sm font-semibold'
+                  ? 'bg-white dark:bg-gray-700 text-purple-300 dark:text-purple-400 shadow-sm font-semibold'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
@@ -818,7 +818,7 @@ export default function ConflictDetection() {
 
         {displayedConflicts.length === 0 ? (
           <div className="card p-12 text-center">
-            <div className="w-12 h-12 bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-purple-950/20 dark:bg-purple-950/40 text-purple-400 dark:text-purple-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">No conflicts in this category</h3>
@@ -854,7 +854,7 @@ export default function ConflictDetection() {
                       <span
                         className={`p-2 rounded-lg ${
                           conflict.resolved
-                            ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300'
+                            ? 'bg-purple-500/20 dark:bg-purple-950/40 text-purple-300 dark:text-purple-300'
                             : 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300'
                         }`}
                       >
@@ -868,14 +868,14 @@ export default function ConflictDetection() {
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">
                             Conflict on Segment:{' '}
-                            <span className="font-mono text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                            <span className="font-mono text-purple-300 dark:text-purple-200 bg-purple-950/20 dark:bg-purple-950/50 px-2 py-0.5 rounded">
                               {projectA?.segmentId || 'SEG-ID'}
                             </span>
                           </span>
                           <span
                             className={`badge ${
                               conflict.resolved
-                                ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300'
+                                ? 'bg-purple-500/20 dark:bg-purple-950/40 text-purple-200 dark:text-purple-300'
                                 : 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300'
                             }`}
                           >
@@ -906,7 +906,7 @@ export default function ConflictDetection() {
                       {projectA && (
                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-750/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="badge bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300">
+                            <span className="badge bg-purple-500/20 dark:bg-purple-950/50 text-purple-200 dark:text-purple-200">
                               {CATEGORY_LABELS[projectA.category] || projectA.category}
                             </span>
                             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -915,10 +915,10 @@ export default function ConflictDetection() {
                           </div>
                           <NavLink
                             to={`/projects/${projectA.id}`}
-                            className="font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 group text-sm"
+                            className="font-bold text-gray-900 dark:text-gray-100 hover:text-purple-400 dark:hover:text-purple-300 transition flex items-center gap-1.5 group text-sm"
                           >
                             {projectA.title}
-                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
+                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-400 dark:group-hover:text-purple-300 transition" />
                           </NavLink>
                           <div className="space-y-1 mt-3 text-xs text-gray-600 dark:text-gray-300">
                             <div className="flex items-center gap-2">
@@ -930,7 +930,7 @@ export default function ConflictDetection() {
                               <span>{projectA.location}</span>
                             </div>
                             <div className="flex items-center gap-2 font-medium text-gray-800 dark:text-gray-200 pt-1">
-                              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                              <Calendar className="w-3.5 h-3.5 text-purple-400 dark:text-purple-300" />
                               <span>
                                 {formatDate(projectA.startDate)} →{' '}
                                 {formatDate(projectA.revisedEndDate || projectA.plannedEndDate)}
@@ -944,7 +944,7 @@ export default function ConflictDetection() {
                       {projectB && (
                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-750/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="badge bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300">
+                            <span className="badge bg-purple-500/20 dark:bg-purple-950/50 text-purple-200 dark:text-purple-200">
                               {CATEGORY_LABELS[projectB.category] || projectB.category}
                             </span>
                             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -953,10 +953,10 @@ export default function ConflictDetection() {
                           </div>
                           <NavLink
                             to={`/projects/${projectB.id}`}
-                            className="font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 group text-sm"
+                            className="font-bold text-gray-900 dark:text-gray-100 hover:text-purple-400 dark:hover:text-purple-300 transition flex items-center gap-1.5 group text-sm"
                           >
                             {projectB.title}
-                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
+                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-400 dark:group-hover:text-purple-300 transition" />
                           </NavLink>
                           <div className="space-y-1 mt-3 text-xs text-gray-600 dark:text-gray-300">
                             <div className="flex items-center gap-2">
@@ -968,7 +968,7 @@ export default function ConflictDetection() {
                               <span>{projectB.location}</span>
                             </div>
                             <div className="flex items-center gap-2 font-medium text-gray-800 dark:text-gray-200 pt-1">
-                              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                              <Calendar className="w-3.5 h-3.5 text-purple-400 dark:text-purple-300" />
                               <span>
                                 {formatDate(projectB.startDate)} →{' '}
                                 {formatDate(projectB.revisedEndDate || projectB.plannedEndDate)}
@@ -996,14 +996,14 @@ export default function ConflictDetection() {
 
                     {/* Resolved Conflict Details View */}
                     {conflict.resolved && (
-                      <div className="bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 rounded-xl p-5 space-y-3">
+                      <div className="bg-purple-950/20/70 dark:bg-purple-950/30 border border-purple-500/30 dark:border-purple-500/30 rounded-xl p-5 space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-2 text-teal-800 dark:text-teal-200 font-bold text-sm">
-                            <CheckCircle2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                          <div className="flex items-center gap-2 text-purple-200 dark:text-teal-200 font-bold text-sm">
+                            <CheckCircle2 className="w-5 h-5 text-purple-400 dark:text-purple-400" />
                             <span>Conflict Resolved & Timeline Synchronized</span>
                           </div>
                           {conflict.resolvedAt && (
-                            <span className="text-xs text-teal-700 dark:text-teal-300 font-mono">
+                            <span className="text-xs text-purple-300 dark:text-purple-300 font-mono">
                               Resolved: {formatDateTime(conflict.resolvedAt)}
                             </span>
                           )}
@@ -1016,7 +1016,7 @@ export default function ConflictDetection() {
                               {conflict.resolutionApplied || 'Schedule Adjusted'}
                             </div>
                             {conflict.resolutionCategory && (
-                              <div className="text-[11px] text-teal-700 dark:text-teal-400 mt-0.5">
+                              <div className="text-[11px] text-purple-300 dark:text-purple-400 mt-0.5">
                                 Category: {RESOLUTION_CATEGORY_LABELS[conflict.resolutionCategory] || conflict.resolutionCategory}
                               </div>
                             )}
@@ -1040,7 +1040,7 @@ export default function ConflictDetection() {
                         )}
 
                         {conflict.changesApplied && conflict.changesApplied.length > 0 && (
-                          <div className="pt-2 border-t border-teal-200/60 dark:border-teal-800/60 text-xs">
+                          <div className="pt-2 border-t border-purple-500/30/60 dark:border-purple-500/30/60 text-xs">
                             <span className="font-semibold text-teal-900 dark:text-teal-200">Timeline Changes Recorded:</span>
                             <div className="mt-1 space-y-1">
                               {conflict.changesApplied.map((ch, idx) => {
@@ -1049,8 +1049,8 @@ export default function ConflictDetection() {
                                   <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                     <span className="font-medium">{p?.title || ch.projectId}:</span>
                                     <span className="text-gray-400 line-through">{ch.previousValue}</span>
-                                    <ArrowRight className="w-3 h-3 text-teal-600" />
-                                    <span className="font-bold text-teal-700 dark:text-teal-300">{ch.newValue}</span>
+                                    <ArrowRight className="w-3 h-3 text-purple-400" />
+                                    <span className="font-bold text-purple-300 dark:text-purple-300">{ch.newValue}</span>
                                   </div>
                                 );
                               })}
@@ -1064,9 +1064,9 @@ export default function ConflictDetection() {
                     {!conflict.resolved && (
                       <div className="space-y-4">
                         {/* Simulator Action Banner / Toggle Button */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/80">
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-purple-950/20 dark:bg-purple-950/40 rounded-xl border border-purple-500/30 dark:border-purple-500/40">
                           <div className="flex items-center gap-2.5">
-                            <span className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
+                            <span className="p-2 bg-[#7C3AED] text-white rounded-lg shadow-sm">
                               <SlidersHorizontal className="w-4 h-4" />
                             </span>
                             <div>
@@ -1114,7 +1114,7 @@ export default function ConflictDetection() {
                         <div className="space-y-3 pt-2">
                           <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                              <Sparkles className="w-3.5 h-3.5 text-purple-400 dark:text-purple-300" />
                               Calculated Alternative Options
                             </h4>
                             <span className="text-[11px] text-gray-500 dark:text-gray-400 italic">
@@ -1128,7 +1128,7 @@ export default function ConflictDetection() {
                                 key={opt.id}
                                 className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
                                   idx === 0 && opt.id !== 'opt-keep'
-                                    ? 'border-blue-400 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-950/30 ring-1 ring-blue-400/40 dark:ring-blue-500/40'
+                                    ? 'border-purple-400 dark:border-purple-500 bg-purple-950/20 dark:bg-purple-950/30 ring-1 ring-purple-500/40 dark:ring-purple-500/40'
                                     : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600'
                                 }`}
                               >
@@ -1136,7 +1136,7 @@ export default function ConflictDetection() {
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs flex items-center gap-1.5">
                                       {idx === 0 && opt.id !== 'opt-keep' && (
-                                        <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                        <span className="bg-[#7C3AED] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
                                           Best
                                         </span>
                                       )}
@@ -1175,7 +1175,7 @@ export default function ConflictDetection() {
                                         onClick={() => {
                                           setSimulatingConflictId(conflict.id);
                                         }}
-                                        className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                        className="text-[11px] text-purple-400 dark:text-purple-300 hover:underline font-medium"
                                       >
                                         Simulate
                                       </button>
@@ -1265,7 +1265,7 @@ export default function ConflictDetection() {
                   <td className="px-4 py-3">
                     <NavLink
                       to={`/projects/${proj.id}`}
-                      className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5"
+                      className="font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-400 dark:hover:text-purple-300 transition flex items-center gap-1.5"
                     >
                       {proj.title}
                       {proj.isCriticalSafetyOverride && (
@@ -1313,9 +1313,9 @@ export default function ConflictDetection() {
       {confirmModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 text-blue-700 dark:text-blue-400">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/60 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center gap-3 text-purple-300 dark:text-purple-300">
+              <div className="w-10 h-10 bg-purple-500/20 dark:bg-purple-950/50 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-purple-400 dark:text-purple-300" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">Confirm Schedule Resolution</h3>
@@ -1337,7 +1337,7 @@ export default function ConflictDetection() {
                     <span className="truncate max-w-[200px] font-medium">
                       {targetProj?.title}
                     </span>
-                    <span className="font-mono bg-white dark:bg-gray-900 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-750 text-blue-700 dark:text-blue-400">
+                    <span className="font-mono bg-white dark:bg-gray-900 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-750 text-purple-300 dark:text-purple-300">
                       {ch.field}: {ch.newValue}
                     </span>
                   </div>

@@ -234,11 +234,11 @@ export function LanguageSelector({
                   'w-full flex items-center justify-between px-3.5 py-2 text-xs text-left transition-colors',
                   isSelected
                     ? isLanding
-                      ? 'bg-blue-600/30 text-blue-200 font-semibold'
-                      : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold'
+                      ? 'bg-purple-600/30 text-purple-200 font-semibold'
+                      : 'bg-purple-500/15 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 font-semibold'
                     : isLanding
                     ? 'hover:bg-white/10 text-gray-200'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                    : 'hover:bg-purple-500/10 dark:hover:bg-purple-950/30'
                 )}
               >
                 <div className="flex flex-col">
@@ -246,7 +246,7 @@ export function LanguageSelector({
                   <span className="text-[10px] opacity-70">{lang.name}</span>
                 </div>
                 {isSelected && (
-                  <Check className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-purple-500 dark:text-purple-400 flex-shrink-0" />
                 )}
               </button>
             );

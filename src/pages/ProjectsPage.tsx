@@ -108,7 +108,7 @@ function ProgressBar({ value }: { value: number }) {
     pct === 100
       ? 'bg-green-500'
       : pct >= 60
-      ? 'bg-blue-500'
+      ? 'bg-purple-950/200'
       : pct >= 30
       ? 'bg-amber-500'
       : 'bg-red-400';
@@ -161,7 +161,7 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <NavLink
       to={`/projects/${project.id}`}
-      className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group"
+      className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-purple-600 transition-all duration-200 group"
     >
       {/* Card Header */}
       <div className="p-4 pb-3">
@@ -179,11 +179,11 @@ function ProjectCard({ project }: { project: Project }) {
           </div>
           <ChevronRight
             size={16}
-            className="text-gray-400 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors"
+            className="text-gray-400 group-hover:text-purple-400 shrink-0 mt-0.5 transition-colors"
           />
         </div>
 
-        <h3 className="mt-2.5 text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+        <h3 className="mt-2.5 text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug group-hover:text-purple-400 dark:group-hover:text-purple-300 transition-colors line-clamp-2">
           {project.title}
         </h3>
 
@@ -392,7 +392,7 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
               onClick={() => setStep(s)}
               className={`py-2.5 text-sm font-medium border-b-2 transition ${
                 step === s
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  ? 'border-purple-600 text-purple-400 dark:text-purple-300'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
@@ -613,10 +613,10 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
             {step === 2 && (
               <>
                 {/* Priority Inputs */}
-                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-xl p-4 space-y-4">
+                <div className="bg-purple-950/20 dark:bg-purple-950/40 border border-purple-500/20 dark:border-blue-900/60 rounded-xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200">Priority Score Inputs</h3>
-                    <span className="text-xs text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
+                    <h3 className="text-sm font-semibold text-purple-100 dark:text-purple-100">Priority Score Inputs</h3>
+                    <span className="text-xs text-purple-400 dark:text-purple-200 bg-purple-500/20 dark:bg-purple-900/40 px-2 py-0.5 rounded-full">
                       Calculated score:{' '}
                       <strong>
                         {calculatePriorityScore({
@@ -630,7 +630,7 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
                       /100
                     </span>
                   </div>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="text-xs text-purple-300 dark:text-purple-200">
                     Rate each factor 0–5. Weights: Safety 30%, Essential 25%, Dependency 20%, Urgency 15%, Disruption 10%.
                   </p>
                   <PrioritySlider
@@ -746,14 +746,14 @@ function AddProjectModal({ onClose, onSubmit }: AddProjectModalProps) {
                     setErrors(newErrors);
                     if (Object.keys(newErrors).length === 0) setStep(2);
                   }}
-                  className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+                  className="px-5 py-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium hover:bg-[#6D28D9] transition"
                 >
                   Next
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+                  className="px-5 py-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium hover:bg-[#6D28D9] transition"
                 >
                   Add Project
                 </button>
@@ -893,7 +893,7 @@ export default function ProjectsPage() {
             {isGovernment ? (
               <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-sm font-medium hover:bg-[#6D28D9] active:scale-95 transition-all shadow-sm"
               >
                 <Plus size={16} />
                 <span className="hidden sm:inline">{t('projects.addNew')}</span>
@@ -952,14 +952,14 @@ export default function ProjectsPage() {
               onClick={() => setShowFilters((v) => !v)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition shrink-0 ${
                 showFilters || activeFilterCount > 0
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                  ? 'border-purple-500 bg-purple-950/20 dark:bg-purple-950/40 text-purple-300 dark:text-purple-200'
                   : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               <Filter size={14} />
               Filters
               {activeFilterCount > 0 && (
-                <span className="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
+                <span className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
                   {activeFilterCount}
                 </span>
               )}
@@ -1063,7 +1063,7 @@ export default function ProjectsPage() {
                 onClick={() => {
                   setSearchParams({});
                 }}
-                className="mt-4 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline transition"
+                className="mt-4 text-sm text-purple-400 hover:text-purple-300 dark:text-purple-300 dark:hover:text-purple-200 underline transition"
               >
                 Clear all filters
               </button>
@@ -1071,7 +1071,7 @@ export default function ProjectsPage() {
             {!query && activeFilterCount === 0 && isGovernment && (
               <button
                 onClick={() => setShowModal(true)}
-                className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-sm font-medium hover:bg-[#6D28D9] transition"
               >
                 <Plus size={16} />
                 Add Project

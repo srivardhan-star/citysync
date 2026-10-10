@@ -1,5 +1,5 @@
 // ============================================================
-// CivicTrack — Reports & Analytics Page
+// CitySync — Reports & Analytics Page
 // ============================================================
 
 import { useState, useMemo } from 'react';
@@ -45,7 +45,7 @@ import type { Project } from '../types';
 // ── Colour constants ─────────────────────────────────────────
 
 const STATUS_CHART_COLORS: Record<string, string> = {
-  planned:   '#3b82f6',
+  planned:   '#7C3AED',
   ongoing:   '#f59e0b',
   delayed:   '#ef4444',
   completed: '#22c55e',
@@ -53,7 +53,7 @@ const STATUS_CHART_COLORS: Record<string, string> = {
 };
 
 const DEPT_PALETTE = [
-  '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981',
+  '#A855F7', '#C084FC', '#F472B6', '#10b981',
   '#6366f1', '#8b5cf6', '#f59e0b',
 ];
 
@@ -101,7 +101,7 @@ interface MetricCardProps {
   accent?: string;
 }
 
-function MetricCard({ icon, label, value, sub, accent = 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' }: MetricCardProps) {
+function MetricCard({ icon, label, value, sub, accent = 'bg-purple-950/20 dark:bg-purple-950/40 text-purple-400 dark:text-purple-300' }: MetricCardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-start gap-4">
       <div className={`rounded-lg p-2.5 ${accent} flex-shrink-0`}>{icon}</div>
@@ -347,7 +347,7 @@ export default function Reports() {
   // ── Status badge ─────────────────────────────────────────
 
   const STATUS_BADGE: Record<string, string> = {
-    planned:   'bg-blue-100 text-blue-800',
+    planned:   'bg-purple-500/20 text-purple-200',
     ongoing:   'bg-amber-100 text-amber-800',
     delayed:   'bg-red-100 text-red-800',
     completed: 'bg-green-100 text-green-800',
@@ -368,7 +368,7 @@ export default function Reports() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 print:hidden transition-colors">
         <div className="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-2 flex-1">
-            <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <BarChart3 className="w-6 h-6 text-purple-400 dark:text-purple-300" />
             <div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('reports.title')}</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -395,7 +395,7 @@ export default function Reports() {
             </button>
             <NavLink
               to="/dashboard"
-              className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+              className="px-3 py-2 rounded-lg bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9] transition"
             >
               ← {t('nav.dashboard')}
             </NavLink>
@@ -453,7 +453,7 @@ export default function Reports() {
             {(deptFilter !== 'All' || statusFilter !== 'All') && (
               <button
                 onClick={() => { setDeptFilter('All'); setStatusFilter('All'); setTablePage(1); }}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-xs text-purple-400 dark:text-purple-300 hover:underline"
               >
                 Clear filters
               </button>
@@ -474,7 +474,7 @@ export default function Reports() {
               label="Total Projects"
               value={metrics.total}
               sub={`${metrics.completedCount} completed`}
-              accent="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
+              accent="bg-purple-950/20 dark:bg-purple-950/40 text-purple-400 dark:text-purple-300"
             />
             <MetricCard
               icon={<CheckCircle2 className="w-5 h-5" />}
@@ -602,7 +602,7 @@ export default function Reports() {
                       return (
                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-sm">
                           <p className="font-semibold text-gray-700 dark:text-gray-200">{d.fullDept}</p>
-                          <p className="text-blue-600 dark:text-blue-400">{d.count} project{d.count !== 1 ? 's' : ''}</p>
+                          <p className="text-purple-400 dark:text-purple-300">{d.count} project{d.count !== 1 ? 's' : ''}</p>
                         </div>
                       );
                     }}
@@ -674,7 +674,7 @@ export default function Reports() {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="Planned" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Planned" fill="#7C3AED" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="Actual" fill="#f59e0b" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -752,7 +752,7 @@ export default function Reports() {
               </div>
               <div className="w-px bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
-                <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{metrics.onTimeRate}%</p>
+                <p className="text-4xl font-bold text-purple-400 dark:text-purple-300">{metrics.onTimeRate}%</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">On-Time Rate</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">Of dated completions</p>
               </div>
@@ -841,8 +841,8 @@ export default function Reports() {
                         key={project.id}
                         className={
                           idx % 2 === 0
-                            ? 'bg-white dark:bg-gray-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/20 transition-colors'
-                            : 'bg-gray-50/60 dark:bg-gray-850/60 hover:bg-blue-50/40 dark:hover:bg-blue-900/20 transition-colors'
+                            ? 'bg-white dark:bg-gray-800 hover:bg-purple-950/20/40 dark:hover:bg-purple-900/20 transition-colors'
+                            : 'bg-gray-50/60 dark:bg-gray-850/60 hover:bg-purple-950/20/40 dark:hover:bg-purple-900/20 transition-colors'
                         }
                       >
                         {/* ID */}
@@ -854,7 +854,7 @@ export default function Reports() {
                         <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium max-w-[180px]">
                           <NavLink
                             to={`/projects/${project.id}`}
-                            className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline line-clamp-1"
+                            className="hover:text-purple-400 dark:hover:text-purple-300 hover:underline line-clamp-1"
                           >
                             {project.title}
                           </NavLink>
@@ -888,7 +888,7 @@ export default function Reports() {
                                     project.progress === 100
                                       ? '#22c55e'
                                       : project.progress >= 50
-                                      ? '#3b82f6'
+                                      ? '#7C3AED'
                                       : '#f59e0b',
                                 }}
                               />
@@ -966,7 +966,7 @@ export default function Reports() {
                         onClick={() => setTablePage(page)}
                         className={`px-2.5 py-1 rounded border text-xs ${
                           page === tablePage
-                            ? 'bg-blue-600 text-white border-blue-600'
+                            ? 'bg-[#7C3AED] text-white border-purple-600'
                             : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }`}
                       >
@@ -1000,7 +1000,7 @@ export default function Reports() {
 
         {/* ── Print-only summary ── */}
         <div className="hidden print:block mt-6 text-xs text-gray-500 border-t pt-4">
-          <p>CivicTrack Analytics Report · Generated {new Date().toLocaleString()}</p>
+          <p>CitySync Analytics Report · Generated {new Date().toLocaleString()}</p>
           <p>
             Filters: Department = {deptFilter} · Status = {statusFilter}
           </p>

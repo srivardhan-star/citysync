@@ -86,7 +86,7 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  created:              'bg-blue-100 text-blue-700',
+  created:              'bg-purple-500/20 text-purple-300',
   status_changed:       'bg-purple-100 text-purple-700',
   milestone_completed:  'bg-green-100 text-green-700',
   delay_recorded:       'bg-red-100 text-red-700',
@@ -360,7 +360,7 @@ function EditModal({
   function ScoreInput({ field, label }: { field: keyof PriorityInputs & keyof EditFormState; label: string }) {
     return (
       <div>
-        <label className={labelCls}>{label} <span className="text-blue-600 font-semibold">{form[field]}</span>/5</label>
+        <label className={labelCls}>{label} <span className="text-purple-400 font-semibold">{form[field]}</span>/5</label>
         <input
           type="range" min={0} max={5} step={1}
           value={form[field] as number}
@@ -376,7 +376,7 @@ function EditModal({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Edit size={18} className="text-blue-600" /> Edit Project
+            <Edit size={18} className="text-purple-400" /> Edit Project
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
@@ -497,7 +497,7 @@ function EditModal({
               Cancel
             </button>
             <button type="submit"
-              className="px-5 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium">
+              className="px-5 py-2 text-sm rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] hover:bg-[#6D28D9] text-white font-medium">
               Save Changes
             </button>
           </div>
@@ -764,7 +764,7 @@ export default function ProjectDetail() {
         <AlertTriangle size={40} className="text-amber-400" />
         <p className="text-lg font-medium">Project not found.</p>
         <button onClick={() => navigate('/projects')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm hover:bg-[#6D28D9]">
           <ArrowLeft size={16} /> Back to Projects
         </button>
       </div>
@@ -940,7 +940,7 @@ export default function ProjectDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <button
             onClick={() => navigate('/projects')}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-400 font-medium transition-colors"
           >
             <ArrowLeft size={16} /> Back to Projects
           </button>
@@ -956,7 +956,7 @@ export default function ProjectDetail() {
               </button>
               <button
                 onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] hover:bg-[#6D28D9] text-white font-medium transition-colors"
               >
                 <Edit size={14} /> Edit Project
               </button>
@@ -1012,9 +1012,9 @@ export default function ProjectDetail() {
 
             {/* Priority score ring */}
             <div className="flex flex-col items-center shrink-0">
-              <div className="w-20 h-20 rounded-full border-4 border-blue-200 flex flex-col items-center justify-center bg-blue-50">
-                <span className="text-2xl font-extrabold text-blue-700">{priorityScore}</span>
-                <span className="text-[10px] text-blue-500 font-medium">/ 100</span>
+              <div className="w-20 h-20 rounded-full border-4 border-purple-500/30 flex flex-col items-center justify-center bg-purple-950/20">
+                <span className="text-2xl font-extrabold text-purple-300">{priorityScore}</span>
+                <span className="text-[10px] text-purple-400 font-medium">/ 100</span>
               </div>
               <span className="mt-1 text-xs text-gray-500 font-medium">Priority Score</span>
             </div>
@@ -1036,7 +1036,7 @@ export default function ProjectDetail() {
                 <div className="flex-1 rounded-full h-2" style={{ backgroundColor: 'var(--cs-border)' }}>
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      project.progress >= 100 ? 'bg-green-500' : project.status === 'delayed' ? 'bg-red-500' : 'bg-blue-500'
+                      project.progress >= 100 ? 'bg-green-500' : project.status === 'delayed' ? 'bg-red-500' : 'bg-[#7C3AED]'
                     }`}
                     style={{ width: `${Math.min(project.progress, 100)}%` }}
                   />
@@ -1082,7 +1082,7 @@ export default function ProjectDetail() {
                           m.completed
                             ? 'text-green-500 cursor-pointer'
                             : isGovernment
-                            ? 'text-gray-400 hover:text-blue-500 cursor-pointer'
+                            ? 'text-gray-400 hover:text-purple-400 cursor-pointer'
                             : 'text-gray-300 cursor-default opacity-60'
                         }`}
                         title={
@@ -1139,9 +1139,9 @@ export default function ProjectDetail() {
 
             {/* Delay analysis */}
             <SectionCard title="Delay Analysis" icon={<AlertTriangle size={16} />}>
-              <div className={`rounded-lg p-4 border ${delay.isDelayed ? 'bg-red-50 border-red-200' : delay.isCompleted ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+              <div className={`rounded-lg p-4 border ${delay.isDelayed ? 'bg-red-50 border-red-200' : delay.isCompleted ? 'bg-green-50 border-green-200' : 'bg-purple-950/20 border-purple-500/30'}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`text-2xl font-extrabold ${delay.isDelayed ? 'text-red-600' : delay.isCompleted && !delay.isDelayed ? 'text-green-600' : 'text-blue-600'}`}>
+                  <div className={`text-2xl font-extrabold ${delay.isDelayed ? 'text-red-600' : delay.isCompleted && !delay.isDelayed ? 'text-green-600' : 'text-purple-400'}`}>
                     {delay.delayDays > 0 ? `+${delay.delayDays}d` : delay.comparisonLabel}
                   </div>
                   <div>
@@ -1254,7 +1254,7 @@ export default function ProjectDetail() {
                             {other && (
                               <p className="text-xs text-gray-500 mt-0.5">
                                 Conflicts with:{' '}
-                                <NavLink to={`/projects/${other.id}`} className="text-blue-600 hover:underline font-medium">
+                                <NavLink to={`/projects/${other.id}`} className="text-purple-400 hover:underline font-medium">
                                   {other.title}
                                 </NavLink>
                               </p>
@@ -1269,7 +1269,7 @@ export default function ProjectDetail() {
                         )}
                         <NavLink
                           to="/conflicts"
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-2"
+                          className="inline-flex items-center gap-1 text-xs text-purple-400 hover:underline mt-2"
                         >
                           View in Conflicts <ChevronRight size={11} />
                         </NavLink>
@@ -1302,7 +1302,7 @@ export default function ProjectDetail() {
                   projectIssues.map((issue) => {
                     const statusConfig = {
                       open: { label: 'Open', color: 'bg-amber-100 text-amber-800 border-amber-200' },
-                      under_review: { label: 'Under Municipal Review', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+                      under_review: { label: 'Under Municipal Review', color: 'bg-purple-500/20 text-purple-200 border-purple-500/30' },
                       resolved: { label: 'Resolved', color: 'bg-green-100 text-green-800 border-green-200' },
                     }[issue.status];
 
@@ -1356,7 +1356,7 @@ export default function ProjectDetail() {
                               {issue.status !== 'under_review' && (
                                 <button
                                   onClick={() => updateIssueReportStatus(issue.id, 'under_review')}
-                                  className="px-2.5 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium border border-blue-200 transition"
+                                  className="px-2.5 py-1 text-[11px] rounded bg-purple-950/20 text-purple-300 hover:bg-purple-500/20 font-medium border border-purple-500/30 transition"
                                 >
                                   Mark Under Review
                                 </button>
@@ -1420,17 +1420,17 @@ export default function ProjectDetail() {
                           <span className="text-gray-400">{icon}</span> {label}
                           <span className="text-gray-400 font-normal">({weight}%)</span>
                         </span>
-                        <span className="font-semibold text-gray-800">{value}/5 → <span className="text-blue-600">+{contrib}pts</span></span>
+                        <span className="font-semibold text-gray-800">{value}/5 → <span className="text-purple-400">+{contrib}pts</span></span>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-1.5">
-                        <div className="h-1.5 rounded-full bg-blue-500 transition-all" style={{ width: `${pct}%` }} />
+                        <div className="h-1.5 rounded-full bg-[#7C3AED] transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })}
                 <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-700">Total Score</span>
-                  <span className="text-lg font-extrabold text-blue-700">{priorityScore}<span className="text-xs text-gray-400 font-normal"> / 100</span></span>
+                  <span className="text-lg font-extrabold text-purple-300">{priorityScore}<span className="text-xs text-gray-400 font-normal"> / 100</span></span>
                 </div>
               </div>
             </SectionCard>
