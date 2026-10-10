@@ -2,9 +2,9 @@
 // CitySync — Data Store (LocalStorage-backed)
 // ============================================================
 
-import type { AppState, Project, Review, AppNotification, Conflict, UserRole, IssueReport, IssueReportStatus } from '../types';
-import { SEED_PROJECTS, SEED_REVIEWS, SEED_NOTIFICATIONS, SEED_ISSUE_REPORTS } from './seedData';
-import { detectConflicts } from '../utils/conflictDetection';
+import type { AppState, Project, Review, AppNotification, Conflict, UserRole, IssueReport, IssueReportStatus, ResolutionCategory, ConflictChangeRecord, LedgerEntry, LedgerProjectRecord } from '../types';
+import { SEED_PROJECTS, SEED_REVIEWS, SEED_NOTIFICATIONS, SEED_ISSUE_REPORTS, SEED_LEDGER_ENTRIES } from './seedData';
+import { detectConflicts, syncConflicts } from '../utils/conflictDetection';
 import { generateId } from '../utils';
 
 const STORAGE_KEY = 'citysync_v4';
@@ -18,6 +18,7 @@ function createInitialState(): AppState {
     notifications: SEED_NOTIFICATIONS,
     reviews: SEED_REVIEWS,
     issueReports: SEED_ISSUE_REPORTS,
+    ledgerEntries: SEED_LEDGER_ENTRIES,
     userRole: 'government',
     dataVersion: DATA_VERSION,
     lastSeeded: new Date().toISOString(),
@@ -40,6 +41,7 @@ export function loadState(): AppState {
       return initial;
     }
     if (!parsed.issueReports) parsed.issueReports = SEED_ISSUE_REPORTS;
+    if (!parsed.ledgerEntries) parsed.ledgerEntries = SEED_LEDGER_ENTRIES;
     if (!parsed.userRole) parsed.userRole = 'government';
     return parsed;
   } catch {
@@ -68,7 +70,7 @@ export function resetToSeedData(): AppState {
 
 export function addProject(state: AppState, project: Project): AppState {
   const newProjects = [...state.projects, project];
-  const conflicts = detectConflicts(newProjects);
+  const conflicts = syncConflicts(state.conflicts, newProjects);
   const notification: AppNotification = {
     id: generateId('notif'),
     type: 'new_project',
@@ -90,7 +92,7 @@ export function addProject(state: AppState, project: Project): AppState {
       : null;
 
   const newConflictNotifs = conflicts
-    .filter((c) => !state.conflicts.some((existing) => existing.id === c.id))
+    .filter((c) => !c.resolved && !state.conflicts.some((existing) => existing.id === c.id))
     .map((c): AppNotification => ({
       id: generateId('notif'),
       type: 'conflict_detected',
@@ -117,13 +119,15 @@ export function addProject(state: AppState, project: Project): AppState {
 
 export function updateProject(state: AppState, updated: Project): AppState {
   const newProjects = state.projects.map((p) => (p.id === updated.id ? updated : p));
-  const conflicts = detectConflicts(newProjects);
+  const conflicts = syncConflicts(state.conflicts, newProjects);
 
   // Detect new conflicts for notifications
-  const existingConflictIds = new Set(state.conflicts.map((c) => c.id));
-  const newConflicts = conflicts.filter((c) => !existingConflictIds.has(c.id));
+  const existingActiveConflictIds = new Set(
+    state.conflicts.filter((c) => !c.resolved).map((c) => c.id)
+  );
+  const newConflicts = conflicts.filter((c) => !c.resolved && !existingActiveConflictIds.has(c.id));
   const resolvedConflictIds = state.conflicts
-    .filter((c) => !conflicts.some((nc) => nc.id === c.id))
+    .filter((c) => !c.resolved && !conflicts.some((nc) => !nc.resolved && nc.id === c.id))
     .map((c) => c.id);
 
   const conflictNotifs: AppNotification[] = [
@@ -157,7 +161,7 @@ export function updateProject(state: AppState, updated: Project): AppState {
 
 export function deleteProject(state: AppState, projectId: string): AppState {
   const newProjects = state.projects.filter((p) => p.id !== projectId);
-  const conflicts = detectConflicts(newProjects);
+  const conflicts = syncConflicts(state.conflicts, newProjects);
   const nextState: AppState = {
     ...state,
     projects: newProjects,
@@ -206,18 +210,33 @@ export function applyResolution(
   state: AppState,
   conflictId: string,
   changes: { projectId: string; field: 'startDate' | 'revisedEndDate'; newValue: string }[],
-  resolutionLabel: string
+  resolutionLabel: string,
+  category: ResolutionCategory = 'sequential_delay',
+  justification?: string,
+  citizenExplanation?: string
 ): AppState {
   let newProjects = [...state.projects];
+  const targetConflict = state.conflicts.find((c) => c.id === conflictId);
+  const changesApplied: ConflictChangeRecord[] = [];
 
   for (const change of changes) {
     newProjects = newProjects.map((p) => {
       if (p.id !== change.projectId) return p;
+      const prevVal = p[change.field] ?? p.plannedEndDate;
+      changesApplied.push({
+        projectId: p.id,
+        field: change.field,
+        previousValue: prevVal,
+        newValue: change.newValue,
+      });
+
+      const fieldLabel = change.field === 'startDate' ? 'Start date' : 'Revised end date';
+      const reasonPart = justification ? ` Justification: ${justification}` : '';
       const actEntry = {
         id: generateId('act'),
         timestamp: new Date().toISOString(),
         type: 'resolution_applied' as const,
-        description: `Schedule updated via conflict resolution: "${resolutionLabel}". ${change.field === 'startDate' ? 'Start date' : 'Revised end date'} changed to ${change.newValue}.`,
+        description: `Schedule updated via conflict resolution: "${resolutionLabel}". ${fieldLabel} changed from ${prevVal} to ${change.newValue}.${reasonPart}`,
         performedBy: 'Demo Coordinator',
       };
       return {
@@ -229,21 +248,132 @@ export function applyResolution(
     });
   }
 
-  const newConflicts = detectConflicts(newProjects);
+  // Preserve the resolved conflict record with full metadata
+  const resolvedConflict: Conflict = targetConflict
+    ? {
+        ...targetConflict,
+        resolved: true,
+        resolvedAt: new Date().toISOString(),
+        resolutionApplied: resolutionLabel,
+        resolutionCategory: category,
+        justification: justification || `Schedule adjusted to eliminate excavation overlap: "${resolutionLabel}".`,
+        citizenExplanation: citizenExplanation || `Project dates rescheduled to prevent concurrent road disruption on this segment.`,
+        changesApplied: changesApplied.length > 0 ? changesApplied : targetConflict.changesApplied,
+      }
+    : {
+        id: conflictId,
+        projectIds: (changes.length >= 2 ? [changes[0].projectId, changes[1].projectId] : ['PRJ-006', 'PRJ-007']) as [string, string],
+        reason: 'same_segment_overlap',
+        description: `Conflict resolved via "${resolutionLabel}".`,
+        publicDisruption: 'Schedule coordinated to eliminate disruption.',
+        detectedAt: new Date().toISOString(),
+        resolved: true,
+        resolvedAt: new Date().toISOString(),
+        resolutionApplied: resolutionLabel,
+        resolutionCategory: category,
+        justification: justification || `Schedule adjusted to eliminate excavation overlap: "${resolutionLabel}".`,
+        citizenExplanation: citizenExplanation || `Project dates rescheduled to prevent concurrent road disruption on this segment.`,
+        changesApplied,
+      };
+
+  const conflictsWithResolved = state.conflicts.map((c) =>
+    c.id === conflictId ? resolvedConflict : c
+  );
+  if (!conflictsWithResolved.some((c) => c.id === conflictId)) {
+    conflictsWithResolved.push(resolvedConflict);
+  }
+
+  const nextConflicts = syncConflicts(conflictsWithResolved, newProjects);
 
   const resolvedNotif: AppNotification = {
     id: generateId('notif'),
     type: 'conflict_resolved',
-    message: `Resolution applied: "${resolutionLabel}". Conflict schedule updated.`,
+    message: `Resolution applied: "${resolutionLabel}". Conflict on segment ${
+      resolvedConflict.segmentId || 'the segment'
+    } resolved.`,
     read: false,
     createdAt: new Date().toISOString(),
   };
 
+  // ── Record Confirmed Decision in Public Accountability Ledger ──
+  const involvedProjectIds = Array.from(
+    new Set([
+      ...(targetConflict?.projectIds || []),
+      ...changes.map((c) => c.projectId),
+    ])
+  );
+
+  const ledgerProjectImpacts = involvedProjectIds
+    .map((pId) => {
+      const origProj = state.projects.find((p) => p.id === pId);
+      const updatedProj = newProjects.find((p) => p.id === pId);
+      if (!origProj) return null;
+
+      const origEnd = origProj.revisedEndDate || origProj.plannedEndDate;
+      const revEnd = updatedProj?.revisedEndDate || updatedProj?.plannedEndDate || origEnd;
+      const projChanges = changesApplied.filter((ca) => ca.projectId === pId);
+
+      return {
+        projectId: origProj.id,
+        projectTitle: origProj.title,
+        department: origProj.department,
+        segmentId: origProj.segmentId,
+        location: origProj.location,
+        originalStartDate: origProj.startDate,
+        originalEndDate: origEnd,
+        revisedStartDate: updatedProj?.startDate || origProj.startDate,
+        revisedEndDate: revEnd,
+        scheduleConfidence: 'confirmed' as const,
+        changes: projChanges,
+      };
+    })
+    .filter(Boolean) as LedgerProjectRecord[];
+
+  const segmentId =
+    resolvedConflict.segmentId ||
+    ledgerProjectImpacts[0]?.segmentId ||
+    'SEG-CHENNAI';
+
+  const location =
+    ledgerProjectImpacts[0]?.location ||
+    'Chennai Infrastructure Corridor';
+
+  const defaultJustification = `Schedule adjusted to eliminate excavation overlap: "${resolutionLabel}".`;
+  const defaultCitizenExplanation = `Project dates rescheduled to prevent concurrent road disruption on this segment.`;
+
+  const ledgerEntry: LedgerEntry = {
+    id: generateId('ledger'),
+    timestamp: new Date().toISOString(),
+    conflictId,
+    title: resolutionLabel,
+    resolutionCategory: category,
+    segmentId,
+    location,
+    projects: ledgerProjectImpacts,
+    reason: resolutionLabel,
+    coordinatorJustification: justification || defaultJustification,
+    citizenExplanation: citizenExplanation || defaultCitizenExplanation,
+    performedBy: 'Greater Chennai Municipal Coordination Cell (Demo)',
+    isDemonstrationRecord: false,
+  };
+
+  const nextLedger = [ledgerEntry, ...(state.ledgerEntries || [])];
+
   const nextState: AppState = {
     ...state,
     projects: newProjects,
-    conflicts: newConflicts,
+    conflicts: nextConflicts,
     notifications: [resolvedNotif, ...state.notifications],
+    ledgerEntries: nextLedger,
+  };
+  saveState(nextState);
+  return nextState;
+}
+
+export function addLedgerEntry(state: AppState, entry: LedgerEntry): AppState {
+  const nextState: AppState = {
+    ...state,
+    ledgerEntries: [entry, ...(state.ledgerEntries || [])],
   };
   saveState(nextState);
   return nextState;

@@ -20,6 +20,35 @@ function isIncompatiblePair(catA: string, catB: string): boolean {
   );
 }
 
+// ── Stable Conflict Identifier ──────────────────────────────
+export function getConflictId(projectAId: string, projectBId: string, segmentId: string): string {
+  const sortedIds = [projectAId, projectBId].sort().join('-');
+  const cleanSegment = segmentId.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+  return `conf-${sortedIds}-${cleanSegment}`;
+}
+
+// ── Timezone-Safe Calendar Arithmetic ────────────────────────
+export function addDaysToDateStr(dateStr: string, days: number): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('T')[0].split('-').map(Number);
+  if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) return dateStr;
+  const date = new Date(parts[0], parts[1] - 1, parts[2] + days);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function daysBetweenDateStr(startStr: string, endStr: string): number {
+  if (!startStr || !endStr) return 0;
+  const p1 = startStr.split('T')[0].split('-').map(Number);
+  const p2 = endStr.split('T')[0].split('-').map(Number);
+  if (p1.length < 3 || p2.length < 3) return 0;
+  const utc1 = Date.UTC(p1[0], p1[1] - 1, p1[2]);
+  const utc2 = Date.UTC(p2[0], p2[1] - 1, p2[2]);
+  return Math.round((utc2 - utc1) / (1000 * 60 * 60 * 24));
+}
+
 function getProjectEndDate(p: Project): string {
   return p.revisedEndDate ?? p.plannedEndDate;
 }
@@ -73,8 +102,9 @@ export function detectConflicts(projects: Project[]): Conflict[] {
       const description = conflictDescription(a, b, reason);
 
       conflicts.push({
-        id: generateId('conf'),
+        id: getConflictId(a.id, b.id, a.segmentId),
         projectIds: [a.id, b.id],
+        segmentId: a.segmentId,
         reason,
         description,
         publicDisruption:
@@ -86,6 +116,118 @@ export function detectConflicts(projects: Project[]): Conflict[] {
   }
 
   return conflicts;
+}
+
+/**
+ * Synchronize current active conflicts with historical resolved conflicts.
+ * Retains resolved conflicts unless a new collision is detected between the same projects.
+ */
+export function syncConflicts(
+  existingConflicts: Conflict[],
+  newProjects: Project[]
+): Conflict[] {
+  const newlyDetected = detectConflicts(newProjects);
+  const activeIds = new Set(newlyDetected.map((c) => c.id));
+
+  // 1. Newly detected active conflicts
+  const updatedActive: Conflict[] = newlyDetected.map((detected) => {
+    const prev = existingConflicts.find((c) => c.id === detected.id);
+    return {
+      ...detected,
+      detectedAt: prev?.detectedAt || detected.detectedAt,
+      resolved: false,
+    };
+  });
+
+  // 2. Retain resolved conflicts that are not actively colliding
+  const projectIds = new Set(newProjects.map((p) => p.id));
+  const retainedResolved = existingConflicts.filter(
+    (c) =>
+      c.resolved &&
+      !activeIds.has(c.id) &&
+      projectIds.has(c.projectIds[0]) &&
+      projectIds.has(c.projectIds[1])
+  );
+
+  return [...updatedActive, ...retainedResolved];
+}
+
+// ── What-If Live Simulation Engine ───────────────────────────
+
+export interface SimulationResult {
+  simulatedProjects: Project[];
+  simulatedConflicts: Conflict[];
+  targetConflictFound: boolean;
+  isTargetConflictResolved: boolean;
+  remainingConflictsCount: number;
+  newConflictsIntroduced: Conflict[];
+  delayDays: number;
+  explanation: string;
+}
+
+export function simulateScheduleAdjustment(
+  projects: Project[],
+  targetConflictId: string,
+  adjustments: { projectId: string; newStartDate?: string; newEndDate?: string }[]
+): SimulationResult {
+  const baselineConflicts = detectConflicts(projects);
+  const targetConflict = baselineConflicts.find((c) => c.id === targetConflictId);
+  const targetConflictFound = !!targetConflict;
+
+  const adjMap = new Map(adjustments.map((a) => [a.projectId, a]));
+
+  const simulatedProjects = projects.map((p) => {
+    const adj = adjMap.get(p.id);
+    if (!adj) return p;
+    return {
+      ...p,
+      startDate: adj.newStartDate ?? p.startDate,
+      revisedEndDate: adj.newEndDate ?? (p.revisedEndDate ?? p.plannedEndDate),
+    };
+  });
+
+  const simulatedConflicts = detectConflicts(simulatedProjects);
+  const isTargetConflictResolved = !simulatedConflicts.some((c) => c.id === targetConflictId);
+
+  const baselineIds = new Set(baselineConflicts.map((c) => c.id));
+  const newConflictsIntroduced = simulatedConflicts.filter((c) => !baselineIds.has(c.id));
+
+  // Compute total delay days across adjustments compared to baseline
+  let totalDelay = 0;
+  for (const adj of adjustments) {
+    const orig = projects.find((p) => p.id === adj.projectId);
+    if (orig && adj.newEndDate) {
+      const origEnd = orig.revisedEndDate ?? orig.plannedEndDate;
+      const diff = daysBetweenDateStr(origEnd, adj.newEndDate);
+      if (diff > 0) totalDelay = Math.max(totalDelay, diff);
+    }
+  }
+
+  let explanation = '';
+  if (isTargetConflictResolved) {
+    if (newConflictsIntroduced.length > 0) {
+      explanation = `Target conflict resolved! However, this schedule shift introduces ${newConflictsIntroduced.length} new conflict(s) with other projects.`;
+    } else {
+      explanation = `Proposed schedule successfully eliminates spatial and temporal overlap on segment ${
+        targetConflict?.segmentId || ''
+      }. Zero concurrent road excavations remain.`;
+    }
+  } else {
+    explanation = `Proposed schedule adjustment is insufficient. Works still overlap on segment ${
+      targetConflict?.segmentId || ''
+    }. Further date adjustments are required.`;
+  }
+
+  return {
+    simulatedProjects,
+    simulatedConflicts,
+    targetConflictFound,
+    isTargetConflictResolved,
+    remainingConflictsCount: simulatedConflicts.length,
+    newConflictsIntroduced,
+    delayDays: totalDelay,
+    explanation,
+  };
 }
 
 /**
@@ -120,10 +262,9 @@ export function generateResolutionOptions(
   });
 
   // Option 2: Complete A before B starts
-  const aEnd = parseISO(endA);
-  const bNewStart = addDays(aEnd, (a.bufferDays || 0) + 1);
-  const bNewEnd = addDays(bNewStart, durationB);
-  const delayB = differenceInDays(bNewStart, parseISO(b.startDate));
+  const bNewStart = addDaysToDateStr(endA, (a.bufferDays || 0) + 1);
+  const bNewEnd = addDaysToDateStr(bNewStart, durationB);
+  const delayB = daysBetweenDateStr(b.startDate, bNewStart);
 
   if (delayB > 0) {
     options.push({
@@ -131,8 +272,8 @@ export function generateResolutionOptions(
       label: `Finish "${a.title}" First, Then Start "${b.title}"`,
       description: `Delay "${b.title}" to start after "${a.title}" completes${a.bufferDays > 0 ? ` (+${a.bufferDays} buffer days)` : ''}.`,
       changes: [
-        { projectId: b.id, field: 'startDate', newValue: bNewStart.toISOString().split('T')[0] },
-        { projectId: b.id, field: 'revisedEndDate', newValue: bNewEnd.toISOString().split('T')[0] },
+        { projectId: b.id, field: 'startDate', newValue: bNewStart },
+        { projectId: b.id, field: 'revisedEndDate', newValue: bNewEnd },
       ],
       addedDelayDays: delayB,
       disruptionScore: 4 + Math.min(delayB / 10, 4),
@@ -142,10 +283,9 @@ export function generateResolutionOptions(
   }
 
   // Option 3: Complete B before A starts
-  const bEnd = parseISO(endB);
-  const aNewStart = addDays(bEnd, (b.bufferDays || 0) + 1);
-  const aNewEnd = addDays(aNewStart, durationA);
-  const delayA = differenceInDays(aNewStart, parseISO(a.startDate));
+  const aNewStart = addDaysToDateStr(endB, (b.bufferDays || 0) + 1);
+  const aNewEnd = addDaysToDateStr(aNewStart, durationA);
+  const delayA = daysBetweenDateStr(a.startDate, aNewStart);
 
   if (delayA > 0) {
     options.push({
@@ -153,8 +293,8 @@ export function generateResolutionOptions(
       label: `Finish "${b.title}" First, Then Start "${a.title}"`,
       description: `Delay "${a.title}" to start after "${b.title}" completes.`,
       changes: [
-        { projectId: a.id, field: 'startDate', newValue: aNewStart.toISOString().split('T')[0] },
-        { projectId: a.id, field: 'revisedEndDate', newValue: aNewEnd.toISOString().split('T')[0] },
+        { projectId: a.id, field: 'startDate', newValue: aNewStart },
+        { projectId: a.id, field: 'revisedEndDate', newValue: aNewEnd },
       ],
       addedDelayDays: delayA,
       disruptionScore: 4 + Math.min(delayA / 10, 4),

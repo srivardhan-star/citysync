@@ -7,6 +7,7 @@ import ConflictDetection from './pages/ConflictDetection'
 import PublicFeedback from './pages/PublicFeedback'
 import Reports from './pages/Reports'
 import ChennaiMap from './pages/ChennaiMap'
+import AccountabilityLedger from './pages/AccountabilityLedger'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/map" element={<ChennaiMap />} />
         <Route path="/conflicts" element={<ConflictDetection />} />
+        <Route path="/ledger" element={<AccountabilityLedger />} />
         <Route path="/feedback" element={<PublicFeedback />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

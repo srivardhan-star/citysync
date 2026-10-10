@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, FolderOpen, AlertTriangle, MessageSquare,
   BarChart3, Bell, RefreshCw, ChevronRight, Zap, X, CheckCheck,
-  Menu, Shield, Building2, Users, Eye, Map, Sun, Moon
+  Menu, Shield, Building2, Users, Eye, Map, Sun, Moon, BookOpen
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
@@ -79,6 +79,11 @@ export default function Layout() {
       to: '/conflicts',
       icon: AlertTriangle,
       label: isGovernment ? 'Conflict Detection' : 'Coordination Viewer',
+    },
+    {
+      to: '/ledger',
+      icon: BookOpen,
+      label: isGovernment ? 'Accountability Ledger' : 'Public Accountability Ledger',
     },
     {
       to: '/feedback',

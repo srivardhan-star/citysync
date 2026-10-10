@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import type { AppState, Project, Review, AppNotification, UserRole, IssueReport, IssueReportStatus } from '../types';
+import type { AppState, Project, Review, AppNotification, UserRole, IssueReport, IssueReportStatus, ResolutionCategory, LedgerEntry } from '../types';
 import {
   loadState,
   resetToSeedData,
@@ -14,6 +14,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   applyResolution,
+  addLedgerEntry as storeAddLedgerEntry,
   setUserRole as storeSetUserRole,
   addIssueReport as storeAddIssueReport,
   updateIssueReportStatus as storeUpdateIssueReportStatus,
@@ -28,7 +29,16 @@ type Action =
   | { type: 'ADD_REVIEW'; review: Review }
   | { type: 'MARK_NOTIFICATION_READ'; notifId: string }
   | { type: 'MARK_ALL_NOTIFICATIONS_READ' }
-  | { type: 'APPLY_RESOLUTION'; conflictId: string; changes: { projectId: string; field: 'startDate' | 'revisedEndDate'; newValue: string }[]; label: string }
+  | {
+      type: 'APPLY_RESOLUTION';
+      conflictId: string;
+      changes: { projectId: string; field: 'startDate' | 'revisedEndDate'; newValue: string }[];
+      label: string;
+      category?: ResolutionCategory;
+      justification?: string;
+      citizenExplanation?: string;
+    }
+  | { type: 'ADD_LEDGER_ENTRY'; entry: LedgerEntry }
   | { type: 'SET_USER_ROLE'; role: UserRole }
   | { type: 'ADD_ISSUE_REPORT'; report: IssueReport }
   | { type: 'UPDATE_ISSUE_REPORT_STATUS'; reportId: string; status: IssueReportStatus; officialResponse?: string }
@@ -64,7 +74,21 @@ function reducer(state: AppState, action: Action): AppState {
         console.warn('Public users cannot apply conflict resolutions.');
         return state;
       }
-      return applyResolution(state, action.conflictId, action.changes, action.label);
+      return applyResolution(
+        state,
+        action.conflictId,
+        action.changes,
+        action.label,
+        action.category,
+        action.justification,
+        action.citizenExplanation
+      );
+    case 'ADD_LEDGER_ENTRY':
+      if (state.userRole === 'public') {
+        console.warn('Public users cannot add ledger entries directly.');
+        return state;
+      }
+      return storeAddLedgerEntry(state, action.entry);
     case 'SET_USER_ROLE':
       return storeSetUserRole(state, action.role);
     case 'ADD_ISSUE_REPORT':
@@ -95,10 +119,18 @@ interface AppContextValue {
   deleteProject: (projectId: string) => void;
   addReview: (review: Review) => void;
   addIssueReport: (report: IssueReport) => void;
+  addLedgerEntry: (entry: LedgerEntry) => void;
   updateIssueReportStatus: (reportId: string, status: IssueReportStatus, officialResponse?: string) => void;
   markNotificationRead: (notifId: string) => void;
   markAllNotificationsRead: () => void;
-  applyResolution: (conflictId: string, changes: { projectId: string; field: 'startDate' | 'revisedEndDate'; newValue: string }[], label: string) => void;
+  applyResolution: (
+    conflictId: string,
+    changes: { projectId: string; field: 'startDate' | 'revisedEndDate'; newValue: string }[],
+    label: string,
+    category?: ResolutionCategory,
+    justification?: string,
+    citizenExplanation?: string
+  ) => void;
   resetData: () => void;
   unreadCount: number;
 }
@@ -125,12 +157,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteProject: useCallback((projectId) => dispatch({ type: 'DELETE_PROJECT', projectId }), []),
     addReview: useCallback((review) => dispatch({ type: 'ADD_REVIEW', review }), []),
     addIssueReport: useCallback((report) => dispatch({ type: 'ADD_ISSUE_REPORT', report }), []),
+    addLedgerEntry: useCallback((entry) => dispatch({ type: 'ADD_LEDGER_ENTRY', entry }), []),
     updateIssueReportStatus: useCallback((reportId, status, officialResponse) =>
       dispatch({ type: 'UPDATE_ISSUE_REPORT_STATUS', reportId, status, officialResponse }), []),
     markNotificationRead: useCallback((notifId) => dispatch({ type: 'MARK_NOTIFICATION_READ', notifId }), []),
     markAllNotificationsRead: useCallback(() => dispatch({ type: 'MARK_ALL_NOTIFICATIONS_READ' }), []),
-    applyResolution: useCallback((conflictId, changes, label) =>
-      dispatch({ type: 'APPLY_RESOLUTION', conflictId, changes, label }), []),
+    applyResolution: useCallback(
+      (conflictId, changes, label, category, justification, citizenExplanation) =>
+        dispatch({
+          type: 'APPLY_RESOLUTION',
+          conflictId,
+          changes,
+          label,
+          category,
+          justification,
+          citizenExplanation,
+        }),
+      []
+    ),
     resetData: useCallback(() => dispatch({ type: 'RESET_DATA' }), []),
   };
 

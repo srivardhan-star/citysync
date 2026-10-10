@@ -124,9 +124,25 @@ export interface Project {
   updatedAt: string;
 }
 
+export type ResolutionCategory =
+  | 'sequential_delay'
+  | 'joint_excavation'
+  | 'fast_track'
+  | 'emergency_reschedule'
+  | 'route_diversion'
+  | 'other';
+
+export interface ConflictChangeRecord {
+  projectId: string;
+  field: 'startDate' | 'revisedEndDate';
+  previousValue: string;
+  newValue: string;
+}
+
 export interface Conflict {
   id: string;
   projectIds: [string, string];
+  segmentId?: string;
   reason: ConflictReason;
   description: string;
   publicDisruption: string;
@@ -134,6 +150,10 @@ export interface Conflict {
   resolved: boolean;
   resolvedAt?: string;
   resolutionApplied?: string;
+  resolutionCategory?: ResolutionCategory;
+  justification?: string;
+  citizenExplanation?: string;
+  changesApplied?: ConflictChangeRecord[];
 }
 
 export interface ConflictResolutionOption {
@@ -185,14 +205,50 @@ export interface IssueReport {
   officialResponse?: string;
 }
 
+export interface LedgerProjectRecord {
+  projectId: string;
+  projectTitle: string;
+  department: string;
+  segmentId: string;
+  location: string;
+  originalStartDate: string;
+  originalEndDate: string;
+  revisedStartDate: string;
+  revisedEndDate: string;
+  scheduleConfidence: 'confirmed' | 'estimated';
+  changes: {
+    field: 'startDate' | 'revisedEndDate';
+    previousValue: string;
+    newValue: string;
+  }[];
+}
+
+export interface LedgerEntry {
+  id: string;
+  timestamp: string;
+  conflictId?: string;
+  title: string;
+  resolutionCategory: ResolutionCategory;
+  segmentId: string;
+  location: string;
+  projects: LedgerProjectRecord[];
+  reason: string;
+  coordinatorJustification: string;
+  citizenExplanation: string;
+  performedBy: string;
+  isDemonstrationRecord: boolean;
+}
+
 export interface AppState {
   projects: Project[];
   conflicts: Conflict[];
   notifications: AppNotification[];
   reviews: Review[];
   issueReports: IssueReport[];
+  ledgerEntries: LedgerEntry[];
   userRole: UserRole;
   dataVersion: number;
   lastSeeded: string;
 }
+
 

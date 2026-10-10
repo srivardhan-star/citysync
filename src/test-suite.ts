@@ -8,9 +8,17 @@ import {
   calculateMilestoneProgress,
   datesOverlap,
 } from './utils/index.ts';
-import { detectConflicts, generateResolutionOptions } from './utils/conflictDetection.ts';
+import {
+  detectConflicts,
+  generateResolutionOptions,
+  addDaysToDateStr,
+  daysBetweenDateStr,
+  simulateScheduleAdjustment,
+  syncConflicts,
+  getConflictId,
+} from './utils/conflictDetection.ts';
 import { SEED_PROJECTS } from './data/seedData.ts';
-import type { Project, PriorityInputs } from './types/index.ts';
+import type { Project, PriorityInputs, IssueReport, ResolutionCategory } from './types/index.ts';
 
 let passed = 0;
 let failed = 0;
@@ -142,8 +150,8 @@ import {
   setUserRole,
   addIssueReport,
   updateIssueReportStatus,
+  applyResolution,
 } from './data/store.ts';
-import type { IssueReport } from './types/index.ts';
 
 const initialStore = loadState();
 assert(initialStore.userRole === 'government', 'Initial state defaults to Government perspective');
@@ -181,6 +189,286 @@ const updatedIssue = resolvedIssueStore.issueReports.find((i) => i.id === 'test-
 assert(
   updatedIssue?.status === 'resolved' && updatedIssue?.officialResponse === 'Fixed by road crew',
   'Government perspective can review, resolve, and respond to citizen issue reports'
+);
+
+// 7. Phase 1: What-If Scheduling Simulator & Conflict Resolution Persistence Tests
+console.log('\n7. What-If Simulator & Conflict Resolution Persistence:');
+
+// 7a. Timezone-safe date arithmetic
+assert(addDaysToDateStr('2026-06-01', 14) === '2026-06-15', 'Shift by +14 days preserves calendar accuracy');
+assert(addDaysToDateStr('2026-06-15', -10) === '2026-06-05', 'Fast-track by -10 days subtracts correctly');
+assert(addDaysToDateStr('2026-02-28', 1) === '2026-03-01', 'Month boundary rollover is accurate');
+assert(addDaysToDateStr('2026-12-31', 2) === '2027-01-02', 'Year boundary rollover is accurate');
+assert(daysBetweenDateStr('2026-06-01', '2026-06-15') === 14, 'daysBetweenDateStr returns exact day delta');
+
+// 7b. Simulation leaves original projects and state unchanged (pure dry run)
+const targetConflict = conflicts[0];
+const [projAId, projBId] = targetConflict.projectIds;
+const originalProjectsSnapshot = JSON.parse(JSON.stringify(SEED_PROJECTS));
+
+const projA = SEED_PROJECTS.find((p) => p.id === projAId)!;
+const projB = SEED_PROJECTS.find((p) => p.id === projBId)!;
+const projAEnd = projA.revisedEndDate || projA.plannedEndDate;
+
+// Shift project B so it begins safely after project A + buffer
+const simulatedStartB = addDaysToDateStr(projAEnd, (projA.bufferDays || 0) + 5);
+const simulatedEndB = addDaysToDateStr(simulatedStartB, 30);
+
+// Simulate adjusting project dates
+const simResult = simulateScheduleAdjustment(SEED_PROJECTS, targetConflict.id, [
+  { projectId: projBId, newStartDate: simulatedStartB, newEndDate: simulatedEndB },
+]);
+
+assert(
+  JSON.stringify(SEED_PROJECTS) === JSON.stringify(originalProjectsSnapshot),
+  'Cancelled/in-progress simulation leaves approved project data completely unchanged'
+);
+assert(
+  simResult.targetConflictFound === true,
+  'Simulator locates and targets the specified conflict by ID'
+);
+assert(
+  simResult.isTargetConflictResolved === true,
+  'Simulated shift resolves the target conflict in dry-run'
+);
+assert(
+  simResult.remainingConflictsCount < conflicts.length,
+  'Simulated resolution reduces remaining conflict count'
+);
+
+// 7c. Explicit Confirmation updates project records, records audit log, and preserves resolved history
+const storeBeforeResolution = loadState();
+const initialActiveConflicts = storeBeforeResolution.conflicts.filter((c) => !c.resolved);
+const initialResolvedConflicts = storeBeforeResolution.conflicts.filter((c) => c.resolved);
+assert(initialActiveConflicts.length >= 1, 'Initial state contains at least 1 active conflict');
+assert(initialResolvedConflicts.length === 0, 'Initial state starts with 0 resolved conflicts');
+
+const activeConflictToResolve = initialActiveConflicts[0];
+const [resolveAId, resolveBId] = activeConflictToResolve.projectIds;
+const targetProjectToShift = storeBeforeResolution.projects.find((p) => p.id === resolveBId)!;
+const otherProject = storeBeforeResolution.projects.find((p) => p.id === resolveAId)!;
+const otherEndDate = otherProject.revisedEndDate || otherProject.plannedEndDate;
+
+const newShiftedStartDate = addDaysToDateStr(otherEndDate, (otherProject.bufferDays || 0) + 7);
+const durationToShift = daysBetweenDateStr(
+  targetProjectToShift.startDate,
+  targetProjectToShift.revisedEndDate || targetProjectToShift.plannedEndDate
+);
+const newShiftedEndDate = addDaysToDateStr(newShiftedStartDate, durationToShift);
+
+const resolutionCategory: ResolutionCategory = 'sequential_delay';
+const justificationText = 'Sequential scheduling applied: Underground cable laying shifted to follow carriageway reconstruction after buffer period.';
+const citizenExplanationText = 'Underground cable work shifted to begin after road reconstruction is fully cured so road is excavated only once.';
+
+const storeAfterResolution = applyResolution(
+  storeBeforeResolution,
+  activeConflictToResolve.id,
+  [
+    { projectId: targetProjectToShift.id, field: 'startDate', newValue: newShiftedStartDate },
+    { projectId: targetProjectToShift.id, field: 'revisedEndDate', newValue: newShiftedEndDate },
+  ],
+  'Sequential Execution (Buffer Cleared)',
+  resolutionCategory,
+  justificationText,
+  citizenExplanationText
+);
+
+// Check project record update
+const updatedProject = storeAfterResolution.projects.find((p) => p.id === targetProjectToShift.id);
+assert(
+  updatedProject?.startDate === newShiftedStartDate && updatedProject?.revisedEndDate === newShiftedEndDate,
+  'Confirmed resolution updates project startDate and revisedEndDate'
+);
+
+// Check activity history audit log
+const projectLatestHistory = updatedProject?.activityHistory[0];
+assert(
+  projectLatestHistory?.type === 'resolution_applied' && projectLatestHistory?.description.includes(justificationText),
+  'Project activity history records resolution_applied with coordinator justification'
+);
+
+// Check resolved conflict retention in history
+const resolvedConflictRecord = storeAfterResolution.conflicts.find((c) => c.id === activeConflictToResolve.id);
+assert(
+  resolvedConflictRecord !== undefined && resolvedConflictRecord.resolved === true,
+  'Resolved conflict is retained in conflicts array with resolved=true'
+);
+assert(
+  resolvedConflictRecord?.resolutionCategory === resolutionCategory &&
+    resolvedConflictRecord?.justification === justificationText &&
+    resolvedConflictRecord?.citizenExplanation === citizenExplanationText,
+  'Resolved conflict stores category, coordinator justification, and citizen explanation'
+);
+assert(
+  (resolvedConflictRecord?.changesApplied?.length ?? 0) > 0,
+  'Resolved conflict records change history (previous vs new values)'
+);
+
+// Check counts
+const finalActiveConflicts = storeAfterResolution.conflicts.filter((c) => !c.resolved);
+const finalResolvedConflicts = storeAfterResolution.conflicts.filter((c) => c.resolved);
+assert(
+  finalActiveConflicts.length === initialActiveConflicts.length - 1,
+  'Active conflict count decrements accurately after resolution'
+);
+assert(
+  finalResolvedConflicts.length === 1,
+  'Resolved conflict count increments to 1 and remains visible in history'
+);
+
+// Check syncConflicts idempotent reconciliation
+const resyncedConflicts = syncConflicts(storeAfterResolution.conflicts, storeAfterResolution.projects);
+assert(
+  resyncedConflicts.some((c) => c.id === activeConflictToResolve.id && c.resolved === true),
+  'syncConflicts preserves previously resolved conflict across state re-evaluations'
+);
+
+// ─────────────────────────────────────────────────────────────────
+// 8. Public Accountability Ledger Tests (Phase 2)
+// ─────────────────────────────────────────────────────────────────
+console.log('\n8. Public Accountability Ledger:');
+import { SEED_LEDGER_ENTRIES } from './data/seedData.ts';
+import { addLedgerEntry } from './data/store.ts';
+import type { LedgerEntry } from './types/index.ts';
+
+// 8.1 — Fresh state includes seed ledger entries
+assert(
+  initialStore.ledgerEntries !== undefined && Array.isArray(initialStore.ledgerEntries),
+  'Initial state has ledgerEntries array'
+);
+assert(
+  initialStore.ledgerEntries.length >= 2,
+  'Initial state contains at least 2 seed ledger entries'
+);
+
+// 8.2 — Seed entries contain the expected demo IDs
+assert(
+  initialStore.ledgerEntries.some((e: LedgerEntry) => e.id === 'ledger-demo-001'),
+  'Seed ledger entry ledger-demo-001 present in initial state'
+);
+assert(
+  initialStore.ledgerEntries.some((e: LedgerEntry) => e.id === 'ledger-demo-002'),
+  'Seed ledger entry ledger-demo-002 present in initial state'
+);
+
+// 8.3 — Seed entries are marked as demonstration records
+assert(
+  initialStore.ledgerEntries.every((e: LedgerEntry) => e.isDemonstrationRecord === true),
+  'All seed ledger entries are marked isDemonstrationRecord=true'
+);
+
+// 8.4 — applyResolution auto-creates exactly 1 new ledger entry
+const ledgerCountBefore = storeAfterResolution.ledgerEntries.length;
+const seedCount = initialStore.ledgerEntries.length;
+assert(
+  ledgerCountBefore === seedCount + 1,
+  'Confirmed resolution creates exactly 1 new ledger entry'
+);
+
+// 8.5 — New ledger entry not marked as demonstration record
+const newLedgerEntry = storeAfterResolution.ledgerEntries[0]; // newest-first (prepended)
+assert(
+  newLedgerEntry !== undefined && newLedgerEntry.isDemonstrationRecord === false,
+  'Newly created ledger entry is NOT marked as demonstration record'
+);
+
+// 8.6 — Ledger entry contains correct resolution category
+assert(
+  newLedgerEntry?.resolutionCategory === resolutionCategory,
+  'Ledger entry carries the coordinator-selected resolution category'
+);
+
+// 8.7 — Ledger entry stores coordinator justification
+assert(
+  newLedgerEntry?.coordinatorJustification === justificationText,
+  'Ledger entry stores coordinator justification text'
+);
+
+// 8.8 — Ledger entry stores citizen explanation
+assert(
+  newLedgerEntry?.citizenExplanation === citizenExplanationText,
+  'Ledger entry stores citizen-facing explanation text'
+);
+
+// 8.9 — Ledger entry records affected projects with date changes
+assert(
+  Array.isArray(newLedgerEntry?.projects) && newLedgerEntry.projects.length > 0,
+  'Ledger entry lists at least one affected project'
+);
+
+assert(
+  newLedgerEntry?.projects.some(
+    (p: { changes: { previousValue: string; newValue: string }[] }) =>
+      p.changes.some((ch) => ch.previousValue !== ch.newValue)
+  ),
+  'Ledger entry project records show previous vs new date values'
+);
+
+// 8.10 — Cancelled simulation does NOT create a ledger entry
+// (we simply do NOT call applyResolution — verify the count after our one resolution)
+assert(
+  storeAfterResolution.ledgerEntries.length === seedCount + 1,
+  'No spurious ledger entries created (cancelled simulations leave count unchanged)'
+);
+
+// 8.11 — addLedgerEntry manual addition works
+const manualEntry: LedgerEntry = {
+  id: 'test-ledger-manual',
+  timestamp: new Date().toISOString(),
+  title: 'Manual Test Entry',
+  conflictId: 'test-conflict-manual',
+  location: 'Test Location',
+  segmentId: 'TEST-SEG-001',
+  resolutionCategory: 'other',
+  reason: 'Testing manual ledger addition',
+  coordinatorJustification: 'Required for test coverage',
+  citizenExplanation: 'A test entry was added.',
+  performedBy: 'test-system',
+  isDemonstrationRecord: false,
+  projects: [],
+};
+const storeWithManualEntry = addLedgerEntry(storeAfterResolution, manualEntry);
+assert(
+  storeWithManualEntry.ledgerEntries.length === storeAfterResolution.ledgerEntries.length + 1,
+  'addLedgerEntry prepends new entry to ledgerEntries'
+);
+assert(
+  storeWithManualEntry.ledgerEntries[0].id === 'test-ledger-manual',
+  'Manually added ledger entry appears at front of ledgerEntries array'
+);
+
+// 8.12 — loadState preserves ledgerEntries across round-trips (fallback check)
+// Since localStorage is unavailable in Node, loadState() returns seed data;
+// verify ledgerEntries are present after re-load
+const reloadedStore = loadState();
+assert(
+  Array.isArray(reloadedStore.ledgerEntries) && reloadedStore.ledgerEntries.length >= 2,
+  'loadState returns ledgerEntries (seed fallback on no-localStorage environment)'
+);
+
+// 8.13 — SEED_LEDGER_ENTRIES export is consistent with store seed
+assert(
+  SEED_LEDGER_ENTRIES.length === 2,
+  'SEED_LEDGER_ENTRIES exports exactly 2 demo entries'
+);
+assert(
+  SEED_LEDGER_ENTRIES[0].id === 'ledger-demo-001' &&
+  SEED_LEDGER_ENTRIES[1].id === 'ledger-demo-002',
+  'SEED_LEDGER_ENTRIES IDs match expected demo-001 and demo-002'
+);
+
+// 8.14 — Each ledger entry has a timestamp, title, location, citizen explanation
+const requiredFields = ['id', 'timestamp', 'title', 'location', 'citizenExplanation', 'segmentId', 'resolutionCategory', 'projects'] as const;
+const allSeedEntriesValid = SEED_LEDGER_ENTRIES.every((e: LedgerEntry) => {
+  const rec = e as unknown as Record<string, unknown>;
+  return requiredFields.every((field) => rec[field] !== undefined && rec[field] !== '');
+});
+assert(allSeedEntriesValid, 'All seed ledger entries contain required fields');
+
+// 8.15 — Ledger entry timestamp is a valid ISO-8601 string
+assert(
+  !isNaN(new Date(newLedgerEntry?.timestamp ?? '').getTime()),
+  'New ledger entry timestamp is a valid date/time'
 );
 
 console.log(`\n========================================`);

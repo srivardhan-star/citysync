@@ -7,7 +7,7 @@
 // Government of Tamil Nadu / Greater Chennai Corporation records.
 // ============================================================
 
-import type { Project, Review, AppNotification, IssueReport } from '../types';
+import type { Project, Review, AppNotification, IssueReport, LedgerEntry } from '../types';
 import { calculatePriorityScore } from '../utils';
 import { generateId } from '../utils';
 
@@ -711,3 +711,68 @@ export const SEED_ISSUE_REPORTS: IssueReport[] = [
     reporterName: 'Mylapore Merchant Association',
   },
 ];
+
+export const SEED_LEDGER_ENTRIES: LedgerEntry[] = [
+  {
+    id: 'ledger-demo-001',
+    timestamp: new Date(daysAgo(45)).toISOString(),
+    title: 'Sequential Scheduling: Anna Nagar 2nd Avenue Drainage & Resurfacing',
+    resolutionCategory: 'sequential_delay',
+    segmentId: 'SEG-AN-001',
+    location: '2nd Avenue, Anna Nagar',
+    projects: [
+      {
+        projectId: 'PRJ-001',
+        projectTitle: 'Anna Nagar 2nd Avenue Road Resurfacing',
+        department: 'Roads & Infrastructure',
+        segmentId: 'SEG-AN-001',
+        location: '2nd Avenue, Anna Nagar',
+        originalStartDate: daysAgo(75),
+        originalEndDate: daysAgo(20),
+        revisedStartDate: daysAgo(60),
+        revisedEndDate: daysAgo(5),
+        scheduleConfidence: 'confirmed',
+        changes: [
+          { field: 'startDate', previousValue: daysAgo(75), newValue: daysAgo(60) },
+          { field: 'revisedEndDate', previousValue: daysAgo(20), newValue: daysAgo(5) },
+        ],
+      },
+    ],
+    reason: 'Sequential Coordination with Stormwater Drain Culvert Works',
+    coordinatorJustification: 'Road resurfacing deferred by 15 days to allow Greater Chennai Corporation Stormwater Drainage division to finalize trenching and culvert backfilling on 2nd Avenue prior to asphalt laying.',
+    citizenExplanation: 'Road paving was rescheduled so underground stormwater drains could be fully repaired first. This prevented digging up freshly paved road surface and reduced total road disruption days.',
+    performedBy: 'Greater Chennai Municipal Coordination Cell (Demo)',
+    isDemonstrationRecord: true,
+  },
+  {
+    id: 'ledger-demo-002',
+    timestamp: new Date(daysAgo(20)).toISOString(),
+    title: 'Joint Coordination: Kasturba Nagar Water Main & Electrical Conduit Synchronization',
+    resolutionCategory: 'joint_excavation',
+    segmentId: 'SEG-AD-001',
+    location: 'Kasturba Nagar Main Road, Adyar',
+    projects: [
+      {
+        projectId: 'PRJ-003',
+        projectTitle: 'Adyar Water Main Replacement — Kasturba Nagar',
+        department: 'Water & Sewerage',
+        segmentId: 'SEG-AD-001',
+        location: 'Kasturba Nagar Main Road, Adyar',
+        originalStartDate: daysAgo(50),
+        originalEndDate: daysFromNow(3),
+        revisedStartDate: daysAgo(45),
+        revisedEndDate: daysFromNow(8),
+        scheduleConfidence: 'confirmed',
+        changes: [
+          { field: 'revisedEndDate', previousValue: daysFromNow(3), newValue: daysFromNow(8) },
+        ],
+      },
+    ],
+    reason: 'Synchronized Trench Sharing for Utility Ducts',
+    coordinatorJustification: 'Water pipeline replacement aligned with municipal electrical duct installation along northern footpath to eliminate redundant excavation phases on Kasturba Nagar corridor.',
+    citizenExplanation: 'Water pipe laying was coordinated with electrical conduit work so the sidewalk on Kasturba Nagar was excavated once instead of twice.',
+    performedBy: 'Adyar Zonal Infrastructure Committee (Demo)',
+    isDemonstrationRecord: true,
+  },
+];
+
